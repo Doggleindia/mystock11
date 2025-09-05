@@ -1,75 +1,146 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import BannerCarousel from "@/components/home/BannerCarousel";
+import ContestCard, { Contest } from "@/components/home/ContestCard";
+import FilterBar from "@/components/home/FilterBar";
+import SegmentedTabs from "@/components/home/SegmentedTabs";
+import React, { useMemo, useState } from "react";
+import { Alert, FlatList, SafeAreaView, View } from "react-native";
+import Header from "../../components/home/Header";
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const niftyData: Contest[] = [
+  {
+    id: "n1",
+    title: "Beginner's Arena",
+    prizePool: 50000,
+    entryFee: 50,
+    timeLeft: "1h : 47m",
+    startTime: "3:20 PM",
+    spotsFilled: 238,
+    totalSpots: 250,
+    winRate: 40,
+    medalPrize: 25000,
+  },
+  {
+    id: "n2",
+    title: "Pro League",
+    prizePool: 75000,
+    entryFee: 50,
+    timeLeft: "2h : 05m",
+    startTime: "4:10 PM",
+    spotsFilled: 120,
+    totalSpots: 180,
+    winRate: 45,
+    medalPrize: 30000,
+  },
+  {
+    id: "n3",
+    title: "Evening Sprint",
+    prizePool: 30000,
+    entryFee: 30,
+    timeLeft: "3h : 15m",
+    spotsFilled: 50,
+    totalSpots: 200,
+  },
+];
 
-export default function HomeScreen() {
+const bankNiftyData: Contest[] = [
+  {
+    id: "b1",
+    title: "Bankers Cup",
+    prizePool: 50000,
+    entryFee: 50,
+    timeLeft: "0h : 52m",
+    startTime: "2:35 PM",
+    spotsFilled: 220,
+    totalSpots: 250,
+    winRate: 42,
+    medalPrize: 25000,
+  },
+  {
+    id: "b2",
+    title: "Bank Blitz",
+    prizePool: 60000,
+    entryFee: 50,
+    timeLeft: "1h : 20m",
+    startTime: "3:10 PM",
+    spotsFilled: 140,
+    totalSpots: 200,
+    winRate: 38,
+  },
+  {
+    id: "b3",
+    title: "Rapid Fire",
+    prizePool: 45000,
+    entryFee: 40,
+    timeLeft: "2h : 00m",
+    startTime: "4:00 PM",
+    spotsFilled: 40,
+    totalSpots: 150,
+  },
+  {
+    id: "b3",
+    title: "Rapid Fire",
+    prizePool: 45000,
+    entryFee: 40,
+    timeLeft: "2h : 00m",
+    startTime: "4:00 PM",
+    spotsFilled: 40,
+    totalSpots: 150,
+  },
+  {
+    id: "b4",
+    title: "Rapid Fire",
+    prizePool: 45000,
+    entryFee: 40,
+    timeLeft: "2h : 00m",
+    startTime: "4:00 PM",
+    spotsFilled: 40,
+    totalSpots: 150,
+  },
+  {
+    id: "b5",
+    title: "Rapid Fire",
+    prizePool: 45000,
+    entryFee: 40,
+    timeLeft: "2h : 00m",
+    startTime: "4:00 PM",
+    spotsFilled: 40,
+    totalSpots: 150,
+  },
+];
+
+export default function Home() {
+  const [tab, setTab] = useState<"NIFTY50" | "BANKNIFTY">("NIFTY50");
+  const [sort, setSort] = useState<"recommended" | "popular">("recommended");
+
+  // only first two contests per tab
+  const data = useMemo(
+    () => (tab === "NIFTY50" ? niftyData : bankNiftyData),
+    [tab]
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
+      <FlatList
+        data={data}
+        keyExtractor={(it) => it.id}
+        ListHeaderComponent={
+          <View>
+            <Header />
+            <BannerCarousel />
+            <SegmentedTabs value={tab} onChange={setTab} />
+            <FilterBar
+              sort={sort}
+              onChangeSort={setSort}
+              onOpenRange={() => Alert.alert("Range", "Open range picker")}
+            />
+          </View>
+        }
+        renderItem={({ item }) => (
+          <ContestCard data={item} onJoin={(id) => Alert.alert("Join", `Joining contest ${id}`)} />
+        )}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      />
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
