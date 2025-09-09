@@ -4,10 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 
 const ContestDetailCard = () => {
   return (
-    <View style={styles.card}>
+    <View  style={styles.card}>
       {/* Header Row */}
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Daily Trading Challenge</Text>
+        <Text className="text-xl font-bold text-red"  style={styles.title}>Daily Trading Challenge</Text>
         <Ionicons name="notifications-outline" size={20} color="#444" />
       </View>
 

@@ -4,6 +4,7 @@ import { View, Text, ScrollView, StyleSheet } from "react-native";
 import CustomButton from "./CustomButton";
 import ContestTabs from "./ContestTabs";
 import ContestDetailCard from "./ContestDetailCard";
+import ContestRules from "./ContestRules";
 
 export default function ContestDetails() {
   const [tab, setTab] = useState<"WINNINGS" | "LEADERBOARD">("WINNINGS");
@@ -11,14 +12,7 @@ export default function ContestDetails() {
   return (
     <ScrollView style={styles.container}>
       <ContestDetailCard />
-      {/* Rules */}
-      <View style={styles.rules}>
-        <Text style={styles.ruleTitle}>📜 Contest Rules</Text>
-        <Text>1. Pick 11 stocks in NIFTY50 or 7-9 stocks in BankNifty.</Text>
-        <Text>2. Choose 1 Captain & 1 Vice Captain.</Text>
-        <Text>3. Portfolio locks at 9:15 AM, cannot be changed.</Text>
-        <Text>4. Points based on real-time price movement.</Text>
-      </View>
+  <ContestRules/>
       {/* Tabs */}
       <ContestTabs value={tab} onChange={setTab} />
 
