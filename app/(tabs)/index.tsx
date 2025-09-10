@@ -119,39 +119,61 @@ export default function Home() {
   const [sort, setSort] = useState<"recommended" | "popular">("recommended");
   const [filters, setFilters] = useState<{
     entryRange: FilterRange | null;
+    maxEntryRange: FilterRange | null;
+    prizePoolRange: FilterRange | null;
     spotsRange: FilterRange | null;
   }>({
     entryRange: null,
+    maxEntryRange: null,
+    prizePoolRange: null,
     spotsRange: null,
   });
 
-const filterContests = (contests: Contest[]) => {
-  return contests.filter((contest) => {
-    if (filters.entryRange) {
-      const entryFee = contest.entryFee;
-      if (
-        entryFee < filters.entryRange.min ||
-        (filters.entryRange.max && entryFee > filters.entryRange.max)
-      ) {
-        return false;
+  const filterContests = (contests: Contest[]) => {
+    return contests.filter((contest) => {
+      if (filters.entryRange) {
+        const entryFee = contest.entryFee;
+        if (
+          entryFee < filters.entryRange.min ||
+          (filters.entryRange.max && entryFee > filters.entryRange.max)
+        ) {
+          return false;
+        }
       }
-    }
 
-    if (filters.spotsRange) {
-      const totalSpots = contest.totalSpots;
-      if (
-        totalSpots < filters.spotsRange.min ||
-        (filters.spotsRange.max && totalSpots > filters.spotsRange.max)
-      ) {
-        return false;
+      if (filters.maxEntryRange) {
+        const maxEntry = contest.totalSpots;
+        if (
+          maxEntry < filters.maxEntryRange.min ||
+          (filters.maxEntryRange.max && maxEntry > filters.maxEntryRange.max)
+        ) {
+          return false;
+        }
       }
-    }
 
-    return true;
-  });
-};
+      if (filters.prizePoolRange) {
+        const prizePool = contest.prizePool;
+        if (
+          prizePool < filters.prizePoolRange.min ||
+          (filters.prizePoolRange.max && prizePool > filters.prizePoolRange.max)
+        ) {
+          return false;
+        }
+      }
 
-const data = useMemo(() => {
+      if (filters.spotsRange) {
+        const totalSpots = contest.totalSpots;
+        if (
+          totalSpots < filters.spotsRange.min ||
+          (filters.spotsRange.max && totalSpots > filters.spotsRange.max)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  };const data = useMemo(() => {
   const rawData = tab === "NIFTY50" ? niftyData : bankNiftyData;
   const filteredData = filterContests(rawData);
 
@@ -179,8 +201,12 @@ const data = useMemo(() => {
               sort={sort}
               onChangeSort={setSort}
               onFiltersChange={(newFilters) => {
-                setFilters(newFilters);
-                // Filter your data here based on the new filters
+                setFilters({
+                  entryRange: newFilters.entryRange,
+                  maxEntryRange: newFilters.maxEntryRange,
+                  prizePoolRange: newFilters.prizePoolRange,
+                  spotsRange: newFilters.spotsRange,
+                });
               }}
             />
           </View>

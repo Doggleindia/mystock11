@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 type TabKey = "NIFTY50" | "BANKNIFTY";
 
@@ -15,19 +15,14 @@ export default function SegmentedTabs({
     return (
       <Pressable
         onPress={() => onChange(k)}
-        style={{
-          flex: 1,
-          paddingVertical: 15,
-          alignItems: "center",
-          borderBottomWidth: active ? 2 : 0, // underline
-          borderBottomColor: active ? "#d00" : "transparent", // red underline when active
-        }}
+        className={`flex-1 py-4 items-center border-b-2 ${
+          active ? "border-red-500" : "border-transparent"
+        }`}
       >
         <Text
-          style={{
-            color: active ? "#d00" : "#444", // active red text
-            fontWeight: active ? "700" : "500",
-          }}
+          className={`${
+            active ? "text-red-500 font-bold" : "text-gray-600 font-medium"
+          }`}
         >
           {label}
         </Text>
@@ -36,12 +31,7 @@ export default function SegmentedTabs({
   };
 
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        marginTop: 10,
-      }}
-    >
+    <View className="flex-row bg-white">
       <Item label="NIFTY 50" k="NIFTY50" />
       <Item label="BANK NIFTY" k="BANKNIFTY" />
     </View>

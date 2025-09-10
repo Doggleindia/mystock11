@@ -15,8 +15,10 @@ interface FilterBarProps {
   sort: SortKey;
   onChangeSort: (s: SortKey) => void;
   onFiltersChange: (filters: {
-    entryRange: FilterRange;
-    spotsRange: FilterRange;
+    entryRange: FilterRange | null;
+    maxEntryRange: FilterRange | null;
+    prizePoolRange: FilterRange | null;
+    spotsRange: FilterRange | null;
   }) => void;
 }
 
@@ -26,7 +28,7 @@ export default function FilterBar({ sort, onChangeSort, onFiltersChange }: Filte
   const Chip = ({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) => (
     <Pressable 
       onPress={onPress} 
-      className={`px-3 py-1.5 rounded-full border ${
+      className={`px-3 mx-1 py-1.5 rounded-full border ${
         active ? "border-red-500 bg-red-50" : "border-gray-200 bg-white"
       }`}
     >
@@ -38,8 +40,9 @@ export default function FilterBar({ sort, onChangeSort, onFiltersChange }: Filte
 
   return (
     <>
-      <View className="flex-row items-center gap-2.5 px-4 py-2.5 bg-white">
+      <View className="flex-row items-center gap-1 px-2 py-2.5 bg-white">
         <Chip 
+     
           label="Recommended" 
           active={sort === "recommended"} 
           onPress={() => onChangeSort("recommended")} 
@@ -51,7 +54,7 @@ export default function FilterBar({ sort, onChangeSort, onFiltersChange }: Filte
         />
         <Pressable 
           onPress={() => setIsFilterOpen(true)} 
-          className="ml-auto flex-row items-center gap-1.5"
+          className="ml-auto my-auto flex-row flex justify-end items-center gap-1"
         >
           <Text className="font-semibold text-gray-700">Select Range</Text>
           <Ionicons name="filter" size={18} color="#444" />

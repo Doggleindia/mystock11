@@ -9,28 +9,46 @@ type RangeOption = {
 };
 
 const entryRanges: RangeOption[] = [
-  { min: 0, max: 100, label: '₹1 - ₹100' },
-  { min: 100, max: 1000, label: '₹101 - ₹1,000' },
-  { min: 1000, max: null, label: '₹1,000 & above' },
+  { min: 1, max: 50, label: '₹1 - ₹50' },
+  { min: 51, max: 100, label: '₹51 - ₹100' },
+  { min: 101, max: 1000, label: '₹101 - ₹1,000' },
+  { min: 1000, max: null, label: '₹1000 - above' },
+];
+
+const prizePoolRanges: RangeOption[] = [
+  { min: 1, max: 10000, label: '₹1 - ₹10,000' },
+  { min: 10000, max: 100000, label: '₹10,000 - ₹1Lakh' },
+  { min: 100000, max: 200000, label: '₹1Lakh - ₹2Lakh' },
+  { min: 200000, max: null, label: '₹2Lakh - above' },
 ];
 
 const spotsRanges: RangeOption[] = [
   { min: 2, max: 5, label: '2 - 5' },
   { min: 5, max: 10, label: '5-10' },
-  { min: 10, max: 50, label: '11-50' },
+  { min: 11, max: 50, label: '11-50' },
   { min: 50, max: 100, label: '50-100' },
+];
+
+const maxEntryRanges: RangeOption[] = [
+  { min: 1001, max: 5000, label: '1001-5000' },
+  { min: 5000, max: 10000, label: '5000-10000' },
+  { min: 10000, max: null, label: '10000-above' },
 ];
 
 interface FilterScreenProps {
   onClose: () => void;
   onApplyFilters: (filters: {
     entryRange: RangeOption | null;
+    maxEntryRange: RangeOption | null;
+    prizePoolRange: RangeOption | null;
     spotsRange: RangeOption | null;
   }) => void;
 }
 
 export default function FilterScreen({ onClose, onApplyFilters }: FilterScreenProps) {
   const [selectedEntryRange, setSelectedEntryRange] = useState<RangeOption | null>(null);
+  const [selectedMaxEntryRange, setSelectedMaxEntryRange] = useState<RangeOption | null>(null);
+  const [selectedPrizePoolRange, setSelectedPrizePoolRange] = useState<RangeOption | null>(null);
   const [selectedSpotsRange, setSelectedSpotsRange] = useState<RangeOption | null>(null);
 
   const RangeChip = ({ range, isSelected, onSelect }: { 
@@ -55,6 +73,8 @@ export default function FilterScreen({ onClose, onApplyFilters }: FilterScreenPr
   const handleApply = () => {
     onApplyFilters({
       entryRange: selectedEntryRange,
+      maxEntryRange: selectedMaxEntryRange,
+      prizePoolRange: selectedPrizePoolRange,
       spotsRange: selectedSpotsRange,
     });
     onClose();
@@ -80,6 +100,34 @@ export default function FilterScreen({ onClose, onApplyFilters }: FilterScreenPr
                 range={range}
                 isSelected={selectedEntryRange?.label === range.label}
                 onSelect={() => setSelectedEntryRange(range)}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <Text className="text-base font-semibold mb-3">Max Entry</Text>
+          <View className="flex-row flex-wrap gap-2">
+            {maxEntryRanges.map((range) => (
+              <RangeChip
+                key={range.label}
+                range={range}
+                isSelected={selectedMaxEntryRange?.label === range.label}
+                onSelect={() => setSelectedMaxEntryRange(range)}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View className="mb-6">
+          <Text className="text-base font-semibold mb-3">Prize Pool</Text>
+          <View className="flex-row flex-wrap gap-2">
+            {prizePoolRanges.map((range) => (
+              <RangeChip
+                key={range.label}
+                range={range}
+                isSelected={selectedPrizePoolRange?.label === range.label}
+                onSelect={() => setSelectedPrizePoolRange(range)}
               />
             ))}
           </View>
