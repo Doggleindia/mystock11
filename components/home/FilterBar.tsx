@@ -1,35 +1,76 @@
-import React from "react";
-import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-
+import React, { useState } from "react";
+import { Modal, Pressable, Text, View } from "react-native";
+import FilterScreen from "./FilterScreen";
 
 type SortKey = "recommended" | "popular";
 
+type FilterRange = {
+  min: number;
+  max: number | null;
+  label: string;
+} | null;
 
-export default function FilterBar({ sort, onChangeSort, onOpenRange }: { sort: SortKey; onChangeSort: (s: SortKey) => void; onOpenRange: () => void; }) {
-const Chip = ({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) => (
-<Pressable onPress={onPress} style={({ pressed }) => ({
-paddingHorizontal: 12,
-paddingVertical: 6,
-borderRadius: 14,
-borderWidth: 1,
-borderColor: active ? "#ff4545" : "#e5e5e5",
-backgroundColor: active ? "#ffecec" : "#fff",
-opacity: pressed ? 0.9 : 1,
-})}>
-<Text style={{ color: active ? "#cc1f1f" : "#444", fontWeight: "600" }}>{label}</Text>
-</Pressable>
-);
+interface FilterBarProps {
+  sort: SortKey;
+  onChangeSort: (s: SortKey) => void;
+  onFiltersChange: (filters: {
+    entryRange: FilterRange;
+    spotsRange: FilterRange;
+  }) => void;
+}
 
+export default function FilterBar({ sort, onChangeSort, onFiltersChange }: FilterBarProps) {
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-return (
-<View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#fff" }}>
-<Chip label="Recommended" active={sort === "recommended"} onPress={() => onChangeSort("recommended")} />
-<Chip label="Popular" active={sort === "popular"} onPress={() => onChangeSort("popular")} />
-<Pressable onPress={onOpenRange} style={{ marginLeft: "auto", flexDirection: "row", alignItems: "center", gap: 6 }}>
-<Text style={{ fontWeight: "600" }}>Select Range</Text>
-<Ionicons name="filter" size={18} />
-</Pressable>
-</View>
-);
+  const Chip = ({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) => (
+    <Pressable 
+      onPress={onPress} 
+      className={`px-3 py-1.5 rounded-full border ${
+        active ? "border-red-500 bg-red-50" : "border-gray-200 bg-white"
+      }`}
+    >
+      <Text className={`font-semibold ${active ? "text-red-600" : "text-gray-700"}`}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+
+  return (
+    <>
+      <View className="flex-row items-center gap-2.5 px-4 py-2.5 bg-white">
+        <Chip 
+          label="Recommended" 
+          active={sort === "recommended"} 
+          onPress={() => onChangeSort("recommended")} 
+        />
+        <Chip 
+          label="Popular" 
+          active={sort === "popular"} 
+          onPress={() => onChangeSort("popular")} 
+        />
+        <Pressable 
+          onPress={() => setIsFilterOpen(true)} 
+          className="ml-auto flex-row items-center gap-1.5"
+        >
+          <Text className="font-semibold text-gray-700">Select Range</Text>
+          <Ionicons name="filter" size={18} color="#444" />
+        </Pressable>
+      </View>
+
+      <Modal
+        visible={isFilterOpen}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <FilterScreen
+          onClose={() => setIsFilterOpen(false)}
+          onApplyFilters={(filters) => {
+            onFiltersChange(filters);
+            setIsFilterOpen(false);
+          }}
+        />
+      </Modal>
+    </>
+  );
 }

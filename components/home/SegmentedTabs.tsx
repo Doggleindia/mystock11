@@ -17,7 +17,7 @@ export default function SegmentedTabs({
         onPress={() => onChange(k)}
         style={{
           flex: 1,
-          paddingVertical: 10,
+          paddingVertical: 15,
           alignItems: "center",
           borderBottomWidth: active ? 2 : 0, // underline
           borderBottomColor: active ? "#d00" : "transparent", // red underline when active

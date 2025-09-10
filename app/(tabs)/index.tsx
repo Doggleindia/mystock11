@@ -3,8 +3,14 @@ import ContestCard, { Contest } from "@/components/home/ContestCard";
 import FilterBar from "@/components/home/FilterBar";
 import SegmentedTabs from "@/components/home/SegmentedTabs";
 import React, { useMemo, useState } from "react";
-import { Alert, FlatList, SafeAreaView, View } from "react-native";
+import { FlatList, SafeAreaView, View } from "react-native";
 import Header from "../../components/home/Header";
+
+type FilterRange = {
+  min: number;
+  max: number | null;
+  label: string;
+};
 
 const niftyData: Contest[] = [
   {
@@ -111,12 +117,53 @@ const bankNiftyData: Contest[] = [
 export default function Home() {
   const [tab, setTab] = useState<"NIFTY50" | "BANKNIFTY">("NIFTY50");
   const [sort, setSort] = useState<"recommended" | "popular">("recommended");
+  const [filters, setFilters] = useState<{
+    entryRange: FilterRange | null;
+    spotsRange: FilterRange | null;
+  }>({
+    entryRange: null,
+    spotsRange: null,
+  });
 
-  // only first two contests per tab
-  const data = useMemo(
-    () => (tab === "NIFTY50" ? niftyData : bankNiftyData),
-    [tab]
-  );
+const filterContests = (contests: Contest[]) => {
+  return contests.filter((contest) => {
+    if (filters.entryRange) {
+      const entryFee = contest.entryFee;
+      if (
+        entryFee < filters.entryRange.min ||
+        (filters.entryRange.max && entryFee > filters.entryRange.max)
+      ) {
+        return false;
+      }
+    }
+
+    if (filters.spotsRange) {
+      const totalSpots = contest.totalSpots;
+      if (
+        totalSpots < filters.spotsRange.min ||
+        (filters.spotsRange.max && totalSpots > filters.spotsRange.max)
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
+const data = useMemo(() => {
+  const rawData = tab === "NIFTY50" ? niftyData : bankNiftyData;
+  const filteredData = filterContests(rawData);
+
+  if (sort === "popular") {
+    return [...filteredData].sort(
+      (a, b) => b.spotsFilled / b.totalSpots - a.spotsFilled / a.totalSpots
+    );
+  }
+
+  return filteredData;
+}, [tab, filters, sort]);
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
@@ -131,13 +178,14 @@ export default function Home() {
             <FilterBar
               sort={sort}
               onChangeSort={setSort}
-              onOpenRange={() => Alert.alert("Range", "Open range picker")}
+              onFiltersChange={(newFilters) => {
+                setFilters(newFilters);
+                // Filter your data here based on the new filters
+              }}
             />
           </View>
         }
-        renderItem={({ item }) => (
-          <ContestCard data={item} onJoin={(id) => Alert.alert("Join", `Joining contest ${id}`)} />
-        )}
+        renderItem={({ item }) => <ContestCard data={item} />}
         contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
       />
