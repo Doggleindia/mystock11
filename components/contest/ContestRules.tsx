@@ -1,29 +1,21 @@
-import { View, Text } from 'react-native'
 import React from 'react'
+import { Text, View } from 'react-native'
 
 const ContestRules = () => {
   return (
-    <>
-        {/* Rules */}
-          <View style={styles.rules}>
-            <Text style={styles.ruleTitle}>📜 Contest Rules</Text>
-            <Text>1. Pick 11 stocks in NIFTY50 or 7-9 stocks in BankNifty.</Text>
-            <Text>2. Choose 1 Captain & 1 Vice Captain.</Text>
-            <Text>3. Portfolio locks at 9:15 AM, cannot be changed.</Text>
-            <Text>4. Points based on real-time price movement.</Text>
-          </View>
-    </>
+    <View className="mt-4 mx-4">
+      <View className="bg-white rounded-lg p-4 shadow-sm">
+        <Text className="text-lg font-semibold mb-2">📜 Contest Rules</Text>
+        <View className="space-y-2">
+          <Text className="text-gray-700">1. Pick 11 stocks in NIFTY50 or 7-9 stocks in BankNifty.</Text>
+          <Text className="text-gray-700">2. Choose 1 Captain & 1 Vice Captain.</Text>
+          <Text className="text-gray-700">3. Portfolio locks at 9:15 AM, cannot be changed during the contest.</Text>
+          <Text className="text-gray-700">4. Points based on real-time stock price movement.</Text>
+          <Text className="text-gray-700">5. Entry fees and withdrawal include GST as per government rules.</Text>
+        </View>
+      </View>
+    </View>
   )
 }
 
 export default ContestRules
-
-const styles = StyleSheet.create({
-  rules: {
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: "#fff7f7",
-    borderRadius: 8,
-  },
-  ruleTitle: { fontWeight: "700", marginBottom: 6 },
-});

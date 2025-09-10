@@ -1,9 +1,9 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import PrimaryButton from "./PrimaryButton";
-import ContestHeader from "./ContestHeader";
 import { useRouter } from "expo-router";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import ContestHeader from "./ContestHeader";
+import PrimaryButton from "./PrimaryButton";
 
 export interface Contest {
   id: string;
@@ -64,10 +64,7 @@ export default function ContestCard({
         <PrimaryButton
           title={`Join ₹${data.entryFee}`}
           onPress={() =>
-            router.push({
-              pathname: "/contest/[id]",
-              params: { id: String(data.id) },
-            })
+            router.push(`/contest/${data.id}`)
           }
         />
       </View>

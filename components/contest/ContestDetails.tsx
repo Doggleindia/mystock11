@@ -1,75 +1,60 @@
-// screens/ContestDetails.tsx
 import React, { useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
-import CustomButton from "./CustomButton";
-import ContestTabs from "./ContestTabs";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import ContestDetailCard from "./ContestDetailCard";
 import ContestRules from "./ContestRules";
+import ContestTabs from "./ContestTabs";
+import WinningsTable from "./WinningsTable";
 
 export default function ContestDetails() {
-  const [tab, setTab] = useState<"WINNINGS" | "LEADERBOARD">("WINNINGS");
+  const [activeTab, setActiveTab] = useState<"WINNINGS" | "LEADERBOARD">("WINNINGS");
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView className="flex-1 bg-gray-50">
       <ContestDetailCard />
-  <ContestRules/>
-      {/* Tabs */}
-      <ContestTabs value={tab} onChange={setTab} />
+      <ContestRules />
+      
+      <ContestTabs 
+        value={activeTab}
+        onChange={setActiveTab}
+      />
 
-      {/* Tab Content */}
-      {tab === "WINNINGS" ? (
-        <View style={styles.content}>
-          <Text>🏆 Rank 1 → ₹25,000</Text>
-          <Text>🏆 Rank 2 → ₹15,000</Text>
-          <Text>🏆 Rank 3 → ₹10,000</Text>
-        </View>
+      {activeTab === 'WINNINGS' ? (
+        <WinningsTable />
       ) : (
-        <View style={styles.content}>
-          <Text>#1 Player123 — ₹25,000</Text>
-          <Text>#2 StockKing — ₹15,000</Text>
-          <Text>#3 TraderPro — ₹10,000</Text>
+        <View className="mx-4 mt-4 bg-white rounded-lg p-4">
+          <View className="space-y-3">
+            <View className="flex-row justify-between items-center">
+              <Text className="text-gray-700 font-medium">#1 Player123</Text>
+              <Text className="text-gray-900 font-bold">₹25,000</Text>
+            </View>
+            <View className="flex-row justify-between items-center">
+              <Text className="text-gray-700 font-medium">#2 StockKing</Text>
+              <Text className="text-gray-900 font-bold">₹15,000</Text>
+            </View>
+            <View className="flex-row justify-between items-center">
+              <Text className="text-gray-700 font-medium">#3 TraderPro</Text>
+              <Text className="text-gray-900 font-bold">₹10,000</Text>
+            </View>
+          </View>
         </View>
       )}
+
+      {/* Timer and Join Button at Bottom */}
+      <View className="mx-4 mt-4 mb-6">
+        <View className="flex-row justify-between items-center mb-3">
+          <View>
+            <Text className="text-gray-600 text-sm">Contest ends in</Text>
+            <Text className="text-red-600 font-bold text-lg">1h : 47m</Text>
+          </View>
+          <Text className="text-gray-600">3:30 PM</Text>
+        </View>
+        <TouchableOpacity 
+          className="bg-green-600 py-3 rounded-lg"
+          onPress={() => {/* Handle join */}}
+        >
+          <Text className="text-white text-center font-semibold text-lg">Join ₹50</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 16 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  headerTitle: { fontSize: 18, fontWeight: "700", color: "#d00" },
-  wallet: { fontSize: 16, fontWeight: "600", color: "#16a34a" },
-  card: {
-    padding: 16,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  title: { fontSize: 16, fontWeight: "700", marginBottom: 6 },
-  price: { fontSize: 22, fontWeight: "700", color: "#000" },
-  entry: { fontSize: 14, color: "#444" },
-  timerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 16,
-  },
-  timer: { fontSize: 16, fontWeight: "700", color: "#d00" },
-  content: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: "#f4f4f4",
-    borderRadius: 8,
-  },
-  rules: {
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: "#fff7f7",
-    borderRadius: 8,
-  },
-  ruleTitle: { fontWeight: "700", marginBottom: 6 },
-});
