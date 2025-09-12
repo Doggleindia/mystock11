@@ -1,8 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 const ContestDetailCard = () => {
+  const handleJoin = () => {
+      router.push('/create-portfolio');
+    };
   return (
     <View className="bg-white rounded-xl mx-4 mt-4 p-4 shadow-sm">
       {/* Header Row */}
@@ -17,7 +21,7 @@ const ContestDetailCard = () => {
           <Text className="text-gray-600 text-sm mb-1">Prize Pool</Text>
           <Text className="text-2xl font-bold">₹50,000</Text>
         </View>
-        <TouchableOpacity className="bg-green-600 py-2 px-4 rounded-lg">
+        <TouchableOpacity  onPress={handleJoin} className="bg-green-600 py-2 px-4 rounded-lg">
           <Text className="text-white font-semibold">₹50</Text>
         </TouchableOpacity>
       </View>
