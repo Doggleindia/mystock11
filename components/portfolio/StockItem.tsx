@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
@@ -21,10 +22,13 @@ export default function StockItem({ stock, isSelected, onToggle }: StockItemProp
   return (
     <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-100">
       {/* Symbol and Change */}
-      <View className="flex-1">
+      <TouchableOpacity 
+        className="flex-1" 
+        onPress={() => router.push({ pathname: "/stock/[symbol]", params: { symbol: stock.symbol }})}
+      >
         <Text className="font-medium text-[15px] text-gray-900">{stock.symbol}</Text>
         <Text className="text-xs text-gray-500 mt-1">{stock.change}</Text>
-      </View>
+      </TouchableOpacity>
 
       {/* Price */}
       <View className="w-24 items-center">
