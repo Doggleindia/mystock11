@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { View, Text } from "react-native";
 import ContestHeader from "./ContestHeader";
 import PrimaryButton from "./PrimaryButton";
 
@@ -18,74 +18,81 @@ export interface Contest {
   medalPrize?: number; // e.g., 25000
 }
 
-const currency = (n: number) => `₹${n.toLocaleString("en-IN")}`;
+const currency = (n: number) => `₹${n?.toLocaleString("en-IN")}`;
 
 export default function ContestCard({
   data,
-  onJoin,
 }: {
   data: Contest;
   onJoin?: (id: string) => void;
 }) {
-  const percent = Math.min(
-    100,
-    Math.round((data.spotsFilled / Math.max(1, data.totalSpots)) * 100)
-  );
+  const currency = (n?: number) => `₹${(n ?? 0).toLocaleString("en-IN")}`;
+
+const percent = Math.min(
+  100,
+  Math.round(((data?.spotsFilled ?? 0) / Math.max(1, data?.totalSpots ?? 1)) * 100)
+);
 
   const router = useRouter();
+
   return (
-    <View style={styles.container}>
+    <View className="bg-white rounded-xl mx-4 my-2 shadow-sm border border-gray-200 overflow-hidden">
       <ContestHeader
-        title={data.title}
-        timeLeft={data.timeLeft}
-        startTime={data.startTime}
+        title={data?.title}
+        timeLeft={data?.timeLeft}
+        startTime={data?.startTime}
       />
 
       {/* Prize row */}
-      <View style={styles.prizeRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.smallLabel}>Prize Pool</Text>
-          <Text style={styles.prizeText}>{currency(data.prizePool)}</Text>
+      <View className="flex-row items-center px-4 pt-2">
+        <View className="flex-1">
+          <Text className="text-gray-500 mb-1 text-xs">Prize Pool</Text>
+          <Text className="text-2xl font-extrabold">
+            {currency(data?.prizePool)}
+          </Text>
         </View>
       </View>
 
       {/* Progress */}
-      <View style={styles.progressWrap}>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${percent}%` }]} />
+      <View className="px-4 mt-2 pb-1">
+        <View className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <View
+            className="bg-red-500 h-2"
+            style={{ width: `${percent}%` }}
+          />
         </View>
-        <Text style={styles.spotsText}>
-          {`${data.spotsFilled}/${data.totalSpots} Spots`}
+        <Text className="text-xs text-gray-500 mt-1">
+          {`${data?.spotsFilled}/${data?.totalSpots} Spots`}
         </Text>
       </View>
 
       {/* Join button */}
-      <View style={styles.joinWrap}>
+      <View className="px-4 py-2">
         <PrimaryButton
-          title={`Join ₹${data.entryFee}`}
-          onPress={() =>
-            router.push(`/contest/${data.id}`)
-          }
+          title={`Join ₹${data?.entryFee}`}
+          onPress={() => router.push(`/contest/${data?.id}`)}
         />
       </View>
 
       {/* Bottom meta */}
-      <View style={styles.metaRow}>
-        <View style={styles.metaItem}>
+      <View className="flex-row items-center px-4 py-3">
+        <View className="flex-row items-center mr-4">
           <Ionicons name="medal" size={16} color="#f59e0b" />
-          <Text style={styles.metaBold}>
-            {currency(data.medalPrize ?? Math.round(data.prizePool / 2))}
+          <Text className="font-bold ml-1">
+            {currency(data?.medalPrize ?? Math.round(data?.prizePool / 2))}
           </Text>
         </View>
 
-        <View style={styles.metaItem}>
+        <View className="flex-row items-center mr-4">
           <Ionicons name="trophy-outline" size={16} color="#6b7280" />
-          <Text style={styles.metaSub}>{(data.winRate ?? 40) + "%"}</Text>
+          <Text className="text-gray-500 ml-1">
+            {(data.winRate ?? 40) + "%"}
+          </Text>
         </View>
 
-        <View style={styles.metaItem}>
+        <View className="flex-row items-center">
           <Ionicons name="people-outline" size={16} color="#6b7280" />
-          <Text style={styles.metaSub}>
+          <Text className="text-gray-500 ml-1">
             M {Math.max(10, Math.round(data.entryFee / 2))}
           </Text>
         </View>
@@ -93,43 +100,3 @@ export default function ContestCard({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-    overflow: "hidden",
-  },
-  prizeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingTop: 8,
-  },
-  smallLabel: { color: "#6b7280", marginBottom: 4 },
-  prizeText: { fontSize: 26, fontWeight: "800" },
-  progressWrap: { paddingHorizontal: 14, marginTop: 8, paddingBottom: 6 },
-  progressTrack: {
-    height: 8,
-    backgroundColor: "#f1f5f9",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  progressFill: { backgroundColor: "#ef4444", height: 8 },
-  spotsText: { fontSize: 12, color: "#6b7280", marginTop: 6 },
-  joinWrap: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10 },
-  metaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-  },
-  metaItem: { flexDirection: "row", alignItems: "center", marginRight: 18 },
-  metaBold: { fontWeight: "700", marginLeft: 6 },
-  metaSub: { color: "#6b7280", marginLeft: 6 },
-});

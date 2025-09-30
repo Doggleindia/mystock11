@@ -93,7 +93,7 @@ export default function CreatePortfolio() {
           ))}
         </ScrollView>
 
-       <PortfolioNextButton  />
+       <PortfolioNextButton url='/select-captain'   />
       </View>
     </>
   );
