@@ -9,7 +9,7 @@ const ContestCard = ({ data }: any) => {
   const pnl = data?.pnl ?? 0;
 const handleJoin = () => {
   // Navigate to create-portfolio screen
-  router.push('/my-contest-details');
+  router.push(data?.url || '/create-portfolio');
 }
   return (
      <TouchableOpacity

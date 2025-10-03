@@ -1,9 +1,7 @@
-import Header from '@/components/wallet/BallanceHeader';
-import Footer from '@/components/wallet/Footer';
-import MainContent from '@/components/wallet/MainContent';
+
+import WalletScreen from '@/components/wallet/WalletScreen';
 import { router, Stack } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
 
 const wallet = () => {
 const handleJoin = () => {
@@ -16,11 +14,12 @@ const handleJoin = () => {
         headerShown: false, // 👈 hides the auto header
       }}
     />
-    <View className="flex-1 bg-white">
+    {/* <View className="flex-1 bg-white">
       <Header  title='Add Balance'/>
       <MainContent />
       <Footer />
-    </View>
+    </View> */}
+    <WalletScreen/>
     </>
   )
 }

@@ -7,6 +7,7 @@ import MyPortfolio from "@/components/my-contest/MyPortfolio";
 import LiveMarket
 
 from "@/components/my-contest/LiveMarket";
+import { Stack } from "expo-router";
 
 const TAB_ITEMS = ["Winnings", "Leaderboard", "My Portfolio", "Live Market"];
 
@@ -27,6 +28,8 @@ const ContestDetailScreen = () => {
   };
 
   return (
+    <>
+    <Stack.Screen options={{ headerShown: false }} />
     <View className="flex-1 bg-white">
       {/* ===== Header ===== */}
       <Header title="Beginner’s Arena" />
@@ -59,6 +62,7 @@ const ContestDetailScreen = () => {
       {/* ===== Content ===== */}
       <ScrollView className="flex-1 bg-gray-50">{renderContent()}</ScrollView>
     </View>
+    </>
   );
 };
 
