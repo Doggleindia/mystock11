@@ -208,15 +208,7 @@ const BalanceInfoRow = ({
   );
 };
 
-const NavItem = ({ icon, label }) => (
-  <TouchableOpacity className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5">
-    <View className="flex-row items-center">
-      <View className="mr-3">{icon}</View>
-      <Text className="text-gray-800 text-sm font-medium">{label}</Text>
-    </View>
-    <ChevronRightIcon />
-  </TouchableOpacity>
-);
+
 
 // --- Main App Component ---
 
@@ -229,8 +221,13 @@ export default function App() {
     router.push("/my-wallet/add-balance");
   };
   const MyTransactions = () => {
-    console.log("come");
     router.push("/my-wallet/transaction");
+  };
+  const KycDetials = () => {
+    router.push("/kyc/kyc-details");
+  };
+   const HelpAndSupport = () => {
+    router.push("/kyc/help-support");
   };
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
@@ -309,7 +306,7 @@ export default function App() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigation.navigate("KYCDetails")}
+              onPress={KycDetials}
               className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5"
             >
               <View className="flex-row items-center">
@@ -339,7 +336,7 @@ export default function App() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => navigation.navigate("HelpSupport")}
+              onPress={HelpAndSupport}
               className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5"
             >
               <View className="flex-row items-center">

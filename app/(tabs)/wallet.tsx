@@ -14,11 +14,6 @@ const handleJoin = () => {
         headerShown: false, // 👈 hides the auto header
       }}
     />
-    {/* <View className="flex-1 bg-white">
-      <Header  title='Add Balance'/>
-      <MainContent />
-      <Footer />
-    </View> */}
     <WalletScreen/>
     </>
   )

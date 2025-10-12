@@ -21,6 +21,8 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
+         {/* <Stack.Screen name="Splash"  /> */}
+        {/* <Stack.Screen name="Onboarding"  /> */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
