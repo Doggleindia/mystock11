@@ -1,6 +1,42 @@
 const BASE_URL = 'http://10.80.197.12:5500/api';
 
 export const authService = {
+  // Get user profile
+  async getProfile(token) {
+    try {
+      const response = await fetch(`${BASE_URL}/auth/getprofile`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data.profile;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Logout user
+  async logout(token) {
+    try {
+      const response = await fetch(`${BASE_URL}/auth/logout`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
   // Register new user
   async register(userData) {
     try {

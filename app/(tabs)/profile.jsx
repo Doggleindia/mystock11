@@ -1,6 +1,7 @@
-import { View, Text, Image, TouchableOpacity, Modal } from 'react-native';
-import React, { useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { useAuthStore } from '../../store/authStore';
 
 const options = [
   { label: "My information", route: "/profile/information", icon: "👤" },
@@ -12,8 +13,13 @@ const options = [
 
 export default function ProfileHomeScreen() {
   const router = useRouter();
-    const [photoModalVisible, setPhotoModalVisible] = useState(false);
-const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [photoModalVisible, setPhotoModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const { user, fetchProfile, logout } = useAuthStore();
+  
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleOptionPress = (route, label) => {
     if (label === "Logout") {
@@ -23,10 +29,15 @@ const [logoutModalVisible, setLogoutModalVisible] = useState(false);
     }
   };
 
-  const handleLogout = () => {
-    setLogoutModalVisible(false);
-    // Add actual logout logic here (e.g. clearing storage, API call)
-    router.replace('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setLogoutModalVisible(false);
+      router.replace('/login');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+      setLogoutModalVisible(false);
+    }
   };  
   return (
     <>
@@ -69,8 +80,8 @@ const [logoutModalVisible, setLogoutModalVisible] = useState(false);
               </View>
             </TouchableOpacity>
             <View className="ml-3 flex-1">
-              <Text className="text-black text-lg font-bold">Archana Jha</Text>
-              <Text className="text-gray-700 text-xs mt-0.5">Skill Score: 460</Text>
+              <Text className="text-black text-lg font-bold">{user ? `${user.firstName} ${user.lastName}` : 'Loading...'}</Text>
+              <Text className="text-gray-700 text-xs mt-0.5">Level {user?.level || 1}</Text>
             </View>
             {/* <TouchableOpacity>
               <Text className="text-2xl text-gray-400">{">"}</Text>
@@ -81,15 +92,17 @@ const [logoutModalVisible, setLogoutModalVisible] = useState(false);
           <View className="flex-row justify-between mt-1 mb-2">
             <View className="items-center flex-1 border border-[#EEE] rounded-lg py-2 mx-1 bg-[#FAFAFA]">
               <Text className="text-xs text-gray-500 mb-1">Contests</Text>
-              <Text className="text-lg font-bold text-gray-800">125</Text>
+              <Text className="text-lg font-bold text-gray-800">{user?.totalContests || 0}</Text>
             </View>
             <View className="items-center flex-1 border border-[#EEE] rounded-lg py-2 mx-1 bg-[#FAFAFA]">
               <Text className="text-xs text-gray-500 mb-1">Win</Text>
-              <Text className="text-lg font-bold text-gray-800">12</Text>
+              <Text className="text-lg font-bold text-gray-800">{user?.totalWins || 0}</Text>
             </View>
             <View className="items-center flex-1 border border-[#EEE] rounded-lg py-2 mx-1 bg-[#FAFAFA]">
               <Text className="text-xs text-gray-500 mb-1">Win Rate</Text>
-              <Text className="text-lg font-bold text-gray-800">10%</Text>
+              <Text className="text-lg font-bold text-gray-800">
+                {user?.totalContests ? ((user.totalWins / user.totalContests) * 100).toFixed(1) : 0}%
+              </Text>
             </View>
           </View>
 
