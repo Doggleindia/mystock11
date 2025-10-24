@@ -1,13 +1,45 @@
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { authService } from '../services/authService';
+import { useAuthStore } from '../store/authStore';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [hidePassword, setHidePassword] = useState(true);
- const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigation = useNavigation();
+  const { setToken, setUser } = useAuthStore();
+
+  const handleLogin = async () => {
+    try {
+      setIsLoading(true);
+      const response = await authService.login({ email, password });
+      await setToken(response.token);
+      setUser(response.user);
+      navigation.replace('(tabs)');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async (token) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.googleLogin(token);
+      await setToken(response.token);
+      setUser(response.user);
+      navigation.replace('(tabs)');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <>
     <Stack.Screen options={{ headerShown: false }} />
@@ -50,8 +82,14 @@ export default function Login() {
       </View>
 
       {/* Sign In button */}
-      <TouchableOpacity className="bg-green-600 rounded-lg py-3 my-2" onPress={() => { /* your sign in logic */ }}>
-        <Text className="text-white text-center font-semibold text-base">Sign in</Text>
+      <TouchableOpacity 
+        className={`bg-green-600 rounded-lg py-3 my-2 ${isLoading ? 'opacity-50' : ''}`} 
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        <Text className="text-white text-center font-semibold text-base">
+          {isLoading ? 'Signing in...' : 'Sign in'}
+        </Text>
       </TouchableOpacity>
 
       {/* Forgot password */}
@@ -67,7 +105,11 @@ export default function Login() {
       </View>
 
       {/* Social login buttons */}
-      <TouchableOpacity className="flex-row items-center border border-gray-200 rounded-lg py-3 mb-3 justify-center">
+      <TouchableOpacity 
+        className="flex-row items-center border border-gray-200 rounded-lg py-3 mb-3 justify-center"
+        onPress={handleGoogleLogin}
+        disabled={isLoading}
+      >
         <Image source={require('../assets/images/google-icon.png')} className="w-6 h-6 mr-2" />
         <Text className="text-gray-700">Continue with Google</Text>
       </TouchableOpacity>

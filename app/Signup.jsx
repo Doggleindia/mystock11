@@ -1,14 +1,51 @@
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { authService } from '../services/authService';
+import { useAuthStore } from '../store/authStore';
 
 export default function SignUpScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    country: 'India',
+    mobileNumber: ''
+  });
   const [hidePassword, setHidePassword] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
+  const { setToken, setUser } = useAuthStore();
+
+  const handleSignup = async () => {
+    try {
+      setIsLoading(true);
+      const response = await authService.register(formData);
+      await setToken(response.token);
+      setUser(response.user);
+      navigation.replace('(tabs)');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async (token) => {
+    try {
+      setIsLoading(true);
+      const response = await authService.googleSignup(token);
+      await setToken(response.token);
+      setUser(response.user);
+      navigation.replace('(tabs)');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
 
   return (
@@ -19,27 +56,48 @@ export default function SignUpScreen() {
       <View className="mb-5 mt-3">
         <Image source={require('../assets/images/stock-logo.png')} className="w-9 h-9" />
       </View>
-      <Text className="text-xl font-bold mb-1">Hi there! <Text>👋</Text></Text>
-      <Text className="text-gray-500 mb-6">Welcome back, Sign in to your account</Text>
+      <Text className="text-xl font-bold mb-1">Create Account <Text>✨</Text></Text>
+      <Text className="text-gray-500 mb-6">Start your journey with us today</Text>
+
+      {/* First Name input */}
+      <TextInput
+        className="border border-gray-200 rounded-lg px-4 py-3 mb-3 bg-gray-50 text-base"
+        placeholder="First Name"
+        placeholderTextColor="#A0AEC0"
+        value={formData.firstName}
+        onChangeText={(text) => setFormData({...formData, firstName: text})}
+        autoCapitalize="words"
+      />
+
+      {/* Last Name input */}
+      <TextInput
+        className="border border-gray-200 rounded-lg px-4 py-3 mb-3 bg-gray-50 text-base"
+        placeholder="Last Name"
+        placeholderTextColor="#A0AEC0"
+        value={formData.lastName}
+        onChangeText={(text) => setFormData({...formData, lastName: text})}
+        autoCapitalize="words"
+      />
 
       {/* Email input */}
       <TextInput
         className="border border-gray-200 rounded-lg px-4 py-3 mb-3 bg-gray-50 text-base"
-        placeholder="User name"
-        placeholderTextColor="#A0AEC0"
-        value={username}
-        onChangeText={setUsername}
-        keyboardType="username"
-        autoCapitalize="none"
-      />
-      <TextInput
-        className="border border-gray-200 rounded-lg px-4 py-3 mb-3 bg-gray-50 text-base"
         placeholder="Email"
         placeholderTextColor="#A0AEC0"
-        value={email}
-        onChangeText={setEmail}
+        value={formData.email}
+        onChangeText={(text) => setFormData({...formData, email: text})}
         keyboardType="email-address"
         autoCapitalize="none"
+      />
+
+      {/* Mobile Number input */}
+      <TextInput
+        className="border border-gray-200 rounded-lg px-4 py-3 mb-3 bg-gray-50 text-base"
+        placeholder="Mobile Number"
+        placeholderTextColor="#A0AEC0"
+        value={formData.mobileNumber}
+        onChangeText={(text) => setFormData({...formData, mobileNumber: text})}
+        keyboardType="phone-pad"
       />
 
       {/* Password input + icon */}
@@ -48,8 +106,8 @@ export default function SignUpScreen() {
           className="border border-gray-200 rounded-lg px-4 py-3 pr-10 bg-gray-50 text-base"
           placeholder="Password"
           placeholderTextColor="#A0AEC0"
-          value={password}
-          onChangeText={setPassword}
+          value={formData.password}
+          onChangeText={(text) => setFormData({...formData, password: text})}
           secureTextEntry={hidePassword}
           autoCapitalize="none"
         />
@@ -61,14 +119,15 @@ export default function SignUpScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Sign In button */}
-      <TouchableOpacity className="bg-green-600 rounded-lg py-3 my-2" onPress={() => { /* your sign in logic */ }}>
-        <Text className="text-white text-center font-semibold text-base">Sign in</Text>
-      </TouchableOpacity>
-
-      {/* Forgot password */}
-      <TouchableOpacity>
-        <Text className="text-green-700 text-xs text-right mb-5 mt-1 font-semibold">Forgot password?</Text>
+      {/* Sign Up button */}
+      <TouchableOpacity 
+        className="bg-green-600 rounded-lg py-3 my-2" 
+        onPress={handleSignup}
+        disabled={isLoading}
+      >
+        <Text className="text-white text-center font-semibold text-base">
+          {isLoading ? 'Creating Account...' : 'Sign Up'}
+        </Text>
       </TouchableOpacity>
 
       {/* Divider */}
@@ -79,14 +138,18 @@ export default function SignUpScreen() {
       </View>
 
       {/* Social login buttons */}
-      <TouchableOpacity className="flex-row items-center border border-gray-200 rounded-lg py-3 mb-3 justify-center">
+      <TouchableOpacity 
+        className="flex-row items-center border border-gray-200 rounded-lg py-3 mb-3 justify-center"
+        onPress={handleGoogleSignup}
+        disabled={isLoading}
+      >
         <Image source={require('../assets/images/google-icon.png')} className="w-6 h-6 mr-2" />
         <Text className="text-gray-700">Continue with Google</Text>
       </TouchableOpacity>
 
-      {/* Sign up footer */}
+      {/* Sign in footer */}
       <View className="flex-row justify-center mt-7">
-        <Text className="text-gray-400">Don't have an account? </Text>
+        <Text className="text-gray-400">Already have an account? </Text>
         <TouchableOpacity onPress={() => navigation.replace('Login')}> 
           <Text className="text-green-700 font-bold">Sign in</Text>
         </TouchableOpacity>

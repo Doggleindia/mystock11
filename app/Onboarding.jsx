@@ -9,7 +9,7 @@ const OnboardingScreen = () => {
      <Stack.Screen options={{ headerShown: false }} />
   <View style={styles.container}>
     <TouchableOpacity style={styles.skip} 
-    onPress={() => navigation.replace('')}
+    onPress={() => navigation.replace('Login')}
     >
       <Text style={styles.skipText}>Skip</Text>
     </TouchableOpacity>

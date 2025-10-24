@@ -3,6 +3,7 @@ import React from 'react';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { Stack } from 'expo-router';
 export default function LogoutScreen() {
+  
   return (
       <>
       <Stack.Screen options={{ headerShown: false }} />
