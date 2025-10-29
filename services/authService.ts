@@ -94,7 +94,7 @@ export const authService = {
   // Google login
   async googleLogin(token) {
     try {
-      const response = await fetch(`${BASE_URL}/auth/google-login`, {
+      const response = await fetch(`${BASE_URL}/auth/firebase/google-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
