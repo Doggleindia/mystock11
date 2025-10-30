@@ -1,3 +1,5 @@
+
+// services/firebaseConfig.js
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
@@ -11,6 +13,9 @@ const firebaseConfig = {
   measurementId: "G-LW4854S66R"
 };
 
+
 const app = initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+export const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
