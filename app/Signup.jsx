@@ -2,9 +2,10 @@ import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { authService } from '../services/authService';
-import { useAuthStore } from '../store/authStore';
-
+import { authService } from "../services/authService";
+import { useAuthStore } from "../store/authStore";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../services/firebaseConfig";1
 export default function SignUpScreen() {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -33,20 +34,31 @@ export default function SignUpScreen() {
     }
   };
 
-  const handleGoogleSignup = async (token) => {
-    try {
-      setIsLoading(true);
-      const response = await authService.googleSignup(token);
-      await setToken(response.token);
-      setUser(response.user);
-      navigation.replace('(tabs)');
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setIsLoading(false);
+const handleGoogleSignup = async () => {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const idToken = await result.user.getIdToken();
+
+    const res = await fetch("http://localhost:5500/api/auth/firebase/google-signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    const data = await res.json();
+    console.log("Signup response:", data);
+
+    if (data.success) {
+      alert(`Welcome ${data.user.firstName}!`);
+      // Save token or redirect
+    } else {
+      alert(data.message);
     }
-  };
-  
+  } catch (error) {
+    console.error("Google signup error:", error);
+  }
+};
+
 
   return (
     <>
