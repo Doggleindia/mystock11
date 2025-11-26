@@ -3,8 +3,17 @@ import ContestCard, { Contest } from "@/components/home/ContestCard";
 import FilterBar from "@/components/home/FilterBar";
 import Header from "@/components/home/Header";
 import SegmentedTabs from "@/components/home/SegmentedTabs";
-import React, { useMemo, useState } from "react";
-import { FlatList, SafeAreaView, View } from "react-native";
+import axios from "axios";
+import Constants from "expo-constants";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 
 type FilterRange = {
@@ -13,110 +22,9 @@ type FilterRange = {
   label: string;
 };
 
-const niftyData: Contest[] = [
-  {
-    id: "n1",
-    title: "Beginner's Arena",
-    prizePool: 50000,
-    entryFee: 50,
-    timeLeft: "1h : 47m",
-    startTime: "3:20 PM",
-    spotsFilled: 238,
-    totalSpots: 250,
-    winRate: 40,
-    medalPrize: 25000,
-  },
-  {
-    id: "n2",
-    title: "Pro League",
-    prizePool: 75000,
-    entryFee: 50,
-    timeLeft: "2h : 05m",
-    startTime: "4:10 PM",
-    spotsFilled: 120,
-    totalSpots: 180,
-    winRate: 45,
-    medalPrize: 30000,
-  },
-  {
-    id: "n3",
-    title: "Evening Sprint",
-    prizePool: 30000,
-    entryFee: 30,
-    timeLeft: "3h : 15m",
-    spotsFilled: 50,
-    totalSpots: 200,
-  },
-];
-
-const bankNiftyData: Contest[] = [
-  {
-    id: "b1",
-    title: "Bankers Cup",
-    prizePool: 50000,
-    entryFee: 50,
-    timeLeft: "0h : 52m",
-    startTime: "2:35 PM",
-    spotsFilled: 220,
-    totalSpots: 250,
-    winRate: 42,
-    medalPrize: 25000,
-  },
-  {
-    id: "b2",
-    title: "Bank Blitz",
-    prizePool: 60000,
-    entryFee: 50,
-    timeLeft: "1h : 20m",
-    startTime: "3:10 PM",
-    spotsFilled: 140,
-    totalSpots: 200,
-    winRate: 38,
-  },
-  {
-    id: "b3",
-    title: "Rapid Fire",
-    prizePool: 45000,
-    entryFee: 40,
-    timeLeft: "2h : 00m",
-    startTime: "4:00 PM",
-    spotsFilled: 40,
-    totalSpots: 150,
-  },
-  {
-    id: "b3",
-    title: "Rapid Fire",
-    prizePool: 45000,
-    entryFee: 40,
-    timeLeft: "2h : 00m",
-    startTime: "4:00 PM",
-    spotsFilled: 40,
-    totalSpots: 150,
-  },
-  {
-    id: "b4",
-    title: "Rapid Fire",
-    prizePool: 45000,
-    entryFee: 40,
-    timeLeft: "2h : 00m",
-    startTime: "4:00 PM",
-    spotsFilled: 40,
-    totalSpots: 150,
-  },
-  {
-    id: "b5",
-    title: "Rapid Fire",
-    prizePool: 45000,
-    entryFee: 40,
-    timeLeft: "2h : 00m",
-    startTime: "4:00 PM",
-    spotsFilled: 40,
-    totalSpots: 150,
-  },
-];
-
 export default function Home() {
-  const [tab, setTab] = useState<"NIFTY50" | "BANKNIFTY">("NIFTY50");
+  const [tabs, setTabs] = useState<Array<{ key: string, label: string }>>([]);
+const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
   const [sort, setSort] = useState<"recommended" | "popular">("recommended");
   const [filters, setFilters] = useState<{
     entryRange: FilterRange | null;
@@ -129,6 +37,54 @@ export default function Home() {
     prizePoolRange: null,
     spotsRange: null,
   });
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL  || Constants.expoConfig?.extra?.API_BASE_URL;
+  // MATCHES: a simple list of matches to display (id + name)
+  const [matches, setMatches] = useState<Array<{ id: string; name: string }>>(
+    []
+  );
+  const [loadingMatches, setLoadingMatches] = useState(false);
+
+  // niftyData will hold contests returned by GET /api/contests/user/match/:matchId
+  const [niftyData, setNiftyData] = useState<Contest[]>([]);
+  const [loadingContests, setLoadingContests] = useState(false);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchMatches();
+  }, []);
+
+ async function fetchMatches() {
+  setLoadingMatches(true);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/admin/matches`);
+    const json = await res.json();
+    const matches = json.data ?? [];
+    // Store tabs: key = id, label = title
+    const newTabs = matches.map(m => ({ key: m._id, label: m.title }));
+    setTabs(newTabs);
+    setSelectedTabKey(newTabs.length ? newTabs[0].key : null);
+    setMatches(matches); // optional: store whole match objects if needed
+  } finally {
+    setLoadingMatches(false);
+  }
+}
+ useEffect(() => {
+  if (selectedTabKey) {
+    fetchContestsForMatch(selectedTabKey);
+  }
+}, [selectedTabKey]);
+
+async function fetchContestsForMatch(matchId:any) {
+  setLoadingContests(true);
+  try {
+    const res = await axios.get(`${API_BASE_URL}/api/contests/user/match/${matchId}`);
+    const contests = res.data?.data ?? []; // adapt to your contest data shape
+    setNiftyData(contests);
+  } finally {
+    setLoadingContests(false);
+  }
+}
 
   const filterContests = (contests: Contest[]) => {
     return contests.filter((contest) => {
@@ -174,30 +130,56 @@ export default function Home() {
 
       return true;
     });
-  };const data = useMemo(() => {
-  const rawData = tab === "NIFTY50" ? niftyData : bankNiftyData;
-  const filteredData = filterContests(rawData);
+  };
 
-  if (sort === "popular") {
-    return [...filteredData].sort(
-      (a, b) => b.spotsFilled / b.totalSpots - a.spotsFilled / a.totalSpots
-    );
-  }
-
-  return filteredData;
-}, [tab, filters, sort]);
-
+  const filteredData = filterContests(niftyData);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
       <FlatList
-        data={data}
+        data={filteredData}
         keyExtractor={(it) => it.id}
         ListHeaderComponent={
           <View>
             <Header />
             <BannerCarousel />
-            <SegmentedTabs value={tab} onChange={setTab} />
+           <SegmentedTabs
+  tabs={tabs}
+  value={selectedTabKey}
+  onChange={setSelectedTabKey}
+/>
+
+
+            {/* Matches list */}
+            <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
+              {loadingMatches ? (
+                <ActivityIndicator />
+              ) : (
+                <FlatList
+                  data={matches}
+                  keyExtractor={(m) => m.id}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => fetchContestsForMatch(item.id)}
+                      style={{
+                        marginRight: 8,
+                        paddingVertical: 8,
+                        paddingHorizontal: 12,
+                        backgroundColor: item.id === selectedMatchId ? "#e6f0ff" : "#fff",
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: "#eee",
+                      }}
+                    >
+                      <Text>{item.name}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
+            </View>
+
             <FilterBar
               sort={sort}
               onChangeSort={setSort}
@@ -210,6 +192,11 @@ export default function Home() {
                 });
               }}
             />
+            {loadingContests && (
+              <View style={{ padding: 12 }}>
+                <ActivityIndicator />
+              </View>
+            )}
           </View>
         }
         renderItem={({ item }) => <ContestCard data={item} />}
