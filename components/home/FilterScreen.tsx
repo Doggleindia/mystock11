@@ -70,12 +70,27 @@ export default function FilterScreen({ onClose, onApplyFilters }: FilterScreenPr
     </Pressable>
   );
 
+
   const handleApply = () => {
     onApplyFilters({
       entryRange: selectedEntryRange,
       maxEntryRange: selectedMaxEntryRange,
       prizePoolRange: selectedPrizePoolRange,
       spotsRange: selectedSpotsRange,
+    });
+    onClose();
+  };
+
+  const handleClear = () => {
+    setSelectedEntryRange(null);
+    setSelectedMaxEntryRange(null);
+    setSelectedPrizePoolRange(null);
+    setSelectedSpotsRange(null);
+    onApplyFilters({
+      entryRange: null,
+      maxEntryRange: null,
+      prizePoolRange: null,
+      spotsRange: null,
     });
     onClose();
   };
@@ -148,10 +163,16 @@ export default function FilterScreen({ onClose, onApplyFilters }: FilterScreenPr
         </View>
       </ScrollView>
 
-      <View className="p-4 bg-white border-t border-gray-200">
+       <View className="p-4 bg-white border-t border-gray-200 flex-row justify-between">
+        <Pressable
+          onPress={handleClear}
+          className="bg-gray-300 py-3 rounded-lg items-center flex-1 mr-2"
+        >
+          <Text className="text-gray-800 font-semibold text-base">Clear</Text>
+        </Pressable>
         <Pressable
           onPress={handleApply}
-          className="bg-green-600 py-3 rounded-lg items-center"
+          className="bg-green-600 py-3 rounded-lg items-center flex-1"
         >
           <Text className="text-white font-semibold text-base">Apply</Text>
         </Pressable>

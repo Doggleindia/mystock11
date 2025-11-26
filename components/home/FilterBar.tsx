@@ -20,9 +20,9 @@ interface FilterBarProps {
     prizePoolRange: FilterRange | null;
     spotsRange: FilterRange | null;
   }) => void;
+  onClearFilters?: () => void;
 }
-
-export default function FilterBar({ sort, onChangeSort, onFiltersChange }: FilterBarProps) {
+export default function FilterBar({ sort, onChangeSort, onFiltersChange, onClearFilters }: FilterBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const Chip = ({ label, active, onPress }: { label: string; active?: boolean; onPress?: () => void }) => (
@@ -42,7 +42,6 @@ export default function FilterBar({ sort, onChangeSort, onFiltersChange }: Filte
     <>
       <View className="flex-row items-center gap-1 px-2 py-2.5 bg-white">
         <Chip 
-     
           label="Recommended" 
           active={sort === "recommended"} 
           onPress={() => onChangeSort("recommended")} 
@@ -59,8 +58,15 @@ export default function FilterBar({ sort, onChangeSort, onFiltersChange }: Filte
           <Text className="font-semibold text-gray-700">Select Range</Text>
           <Ionicons name="filter" size={18} color="#444" />
         </Pressable>
+        {onClearFilters && (
+          <Pressable
+            onPress={onClearFilters}
+            style={{ marginLeft: 8 }}
+          >
+            <Text style={{ color: "#DB4437", fontWeight: "bold" }}>Clear</Text>
+          </Pressable>
+        )}
       </View>
-
       <Modal
         visible={isFilterOpen}
         animationType="slide"
