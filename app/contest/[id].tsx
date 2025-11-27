@@ -26,7 +26,7 @@ export default function ContestDetails() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/contests/user/${id}`);
+        const res = await axios.get(`${API_BASE_URL}/api/match-contests/admin/${id}`);
         // API returns { success, data: { ...contest } }
         setContest(res.data?.data ?? null);
       } catch (e: any) {

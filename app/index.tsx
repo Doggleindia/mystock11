@@ -104,7 +104,7 @@ function normalizeContestApiData(apiData :any[]) {
 async function fetchContestsForMatch(matchId:any) {
   setLoadingContests(true);
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/contests/user/match/${matchId}?sort=${sort}`);
+    const res = await axios.get(`${API_BASE_URL}/api/match-contests/admin/?${matchId}sort=${sort}`);
     // Your API might return {data: [...]}, {contests: [...]}, or just an array
     const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
     setNiftyData(normalizeContestApiData(raw));
