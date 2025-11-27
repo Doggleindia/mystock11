@@ -10,6 +10,8 @@ export interface Stock {
   isPositive: boolean;
   credits: number;
   setBy?: string;
+  companyName?: string;
+  sector?: string;
 }
 
 interface StockItemProps {

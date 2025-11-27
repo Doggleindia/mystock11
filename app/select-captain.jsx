@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -6,6 +6,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Stack, router } from "expo-router";
 import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
@@ -13,35 +14,71 @@ import CaptainInfoBar from "../components/select-captainvc/CaptainInfoBar";
 import StockHeader from "../components/select-captainvc/StockHeader";
 import StockRow from "../components/select-captainvc/StockRow";
 import ConfirmationButton from "../components/select-captainvc/ConfirmationButton";
+import usePortfolioStore from "@/store/portfolioStore";
 
 export default function SelectCaptainVC() {
-  const [captain, setCaptain] = useState(null);
-  const [viceCaptain, setViceCaptain] = useState(null);
+  const draftPortfolio = usePortfolioStore((state) => state.draftPortfolio);
+  const updateDraftPortfolio = usePortfolioStore((state) => state.updateDraftPortfolio);
 
-  const [showConfirm, setShowConfirm] = useState(false);   // first modal
-  const [showSuccess, setShowSuccess] = useState(false);   // success modal
+  const [captain, setCaptain] = useState(draftPortfolio?.captain ?? null);
+  const [viceCaptain, setViceCaptain] = useState(draftPortfolio?.viceCaptain ?? null);
 
-  const stocks = [
-    { id: "HDFCBANK", name: "HDFCBANK", value: 2010.25, change: -15.35 },
-    { id: "INFY", name: "INFY", value: 2010.25, change: -15.35 },
-    { id: "TCS", name: "TCS", value: 2010.25, change: -15.35 },
-  ];
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const stocks = useMemo(() => {
+    return (
+      draftPortfolio?.team?.map((member) => ({
+        id: member.stockSymbol,
+        name: member.companyName || member.stockSymbol,
+        value: member.buyPrice || 0,
+        change: 0,
+        changePct: 0,
+      })) || []
+    );
+  }, [draftPortfolio]);
 
   const handleSelect = (id, type) => {
     if (type === "C") setCaptain(id === captain ? null : id);
     if (type === "VC") setViceCaptain(id === viceCaptain ? null : id);
   };
 
-  const handleJoin = () => {
-    setShowConfirm(false);
-    setShowSuccess(true);          // show success modal
+  const handleProceed = () => {
+    if (!captain || !viceCaptain) {
+      Alert.alert("Choose leaders", "Select both captain and vice captain before continuing.");
+      return;
+    }
 
-    // after 5 seconds go to My Contest tab
-    setTimeout(() => {
-      setShowSuccess(false);
-      router.push("/my-contest");  // 👈 adjust to your tab route
-    }, 5000);
+    if (!draftPortfolio?.team?.length) {
+      Alert.alert("No team found", "Please create a portfolio first.");
+      router.replace("/create-portfolio");
+      return;
+    }
+
+    updateDraftPortfolio({
+      captain,
+      viceCaptain,
+    });
+
+    setShowConfirm(false);
+    router.push("/join-portfolio");
   };
+
+  if (!draftPortfolio?.team?.length) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
+        <Text className="text-lg font-semibold mb-2">No portfolio found</Text>
+        <Text className="text-center text-gray-600 mb-6">
+          Please select 11 stocks first so we can build your team.
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.replace("/create-portfolio")}
+          className="bg-green-600 px-6 py-3 rounded-full"
+        >
+          <Text className="text-white font-semibold">Create portfolio</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <>
@@ -63,6 +100,11 @@ export default function SelectCaptainVC() {
               onSelect={handleSelect}
             />
           )}
+          ListEmptyComponent={
+            <View className="py-10 items-center">
+              <Text className="text-gray-500">No stocks available.</Text>
+            </View>
+          }
         />
 
         <ConfirmationButton onNext={() => setShowConfirm(true)} />
@@ -92,16 +134,18 @@ export default function SelectCaptainVC() {
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 16 }}>
-              <Text style={{ fontWeight: "600" }}>To Pay</Text>
-              <Text style={{ fontWeight: "600" }}>₹40</Text>
+              <Text style={{ fontWeight: "600" }}>Captain / Vice Captain</Text>
+              <Text style={{ fontWeight: "600" }}>
+                {captain || "-"} / {viceCaptain || "-"}
+              </Text>
             </View>
 
             <TouchableOpacity
               style={{ backgroundColor: "green", paddingVertical: 12, borderRadius: 8, marginBottom: 12 }}
-              onPress={handleJoin}
+              onPress={handleProceed}
             >
               <Text style={{ color: "white", textAlign: "center", fontWeight: "bold" }}>
-                Join Contest
+                Review & Join
               </Text>
             </TouchableOpacity>
 
@@ -112,20 +156,6 @@ export default function SelectCaptainVC() {
         </SafeAreaView>
       </Modal>
 
-      {/* ===== Second Modal (Success Message) ===== */}
-      <Modal
-        visible={showSuccess}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowSuccess(false)}
-      >
-        <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <View style={{ backgroundColor: "white", padding: 30, borderRadius: 12, alignItems: "center" }}>
-            <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 8 }}>🎉 Successfully Joined!</Text>
-            <Text style={{ color: "gray" }}>Redirecting to My Contest...</Text>
-          </View>
-        </SafeAreaView>
-      </Modal>
     </>
   );
 }

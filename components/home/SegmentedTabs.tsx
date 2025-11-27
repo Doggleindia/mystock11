@@ -1,14 +1,17 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 
-type TabKey = "NIFTY50" | "BANKNIFTY";
+const DEFAULT_TABS = [
+  { key: "NIFTY50", label: "NIFTY 50" },
+  { key: "BANKNIFTY", label: "BANK NIFTY" },
+];
 
 export default function SegmentedTabs({
-  tabs,
+  tabs = DEFAULT_TABS,
   value,
   onChange,
 }: {
-  tabs: Array<{ key: string, label: string }>;
+  tabs?: Array<{ key: string; label: string }>;
   value: string | null;
   onChange: (t: string) => void;
 }) {

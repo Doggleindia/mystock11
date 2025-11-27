@@ -1,52 +1,87 @@
 import React from "react";
-import { View, Text, ScrollView } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
-const stocks = [
-  { name: "RELIANCE", value: 2540.5, change: "+30.10 (1.20%)", percent: "85%", positive: true },
-  { name: "HDFCBANK", value: 3000.25, change: "-15.35 (0.75%)", percent: "78%", positive: false },
-  { name: "TCS", value: 3150.75, change: "+22.45 (0.71%)", percent: "90%", positive: true },
-  { name: "INFOSYS", value: 1627.85, change: "+10.65 (0.62%)", percent: "89%", positive: true },
-  { name: "Kotak Mahindra", value: 1811.2, change: "+27.65 (1.55%)", percent: "91%", positive: true },
-  { name: "INFI", value: 6199.5, change: "-45.20 (0.73%)", percent: "76%", positive: false },
-  { name: "ITC", value: 400.1, change: "+5.30 (1.34%)", percent: "88%", positive: true },
-  { name: "LT", value: 2000, change: "+15.60 (0.75%)", percent: "84%", positive: true },
-  { name: "MARUTI", value: 8200, change: "-120.95 (1.45%)", percent: "73%", positive: false },
-  { name: "AXISBANK", value: 900.75, change: "+4.55 (0.51%)", percent: "82%", positive: true },
-  { name: "HINDALCO", value: 450.85, change: "+4.15 (0.93%)", percent: "80%", positive: true },
-];
+const currency = (n) =>
+  typeof n === "number" && !Number.isNaN(n)
+    ? `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
+    : "₹0";
 
-const currency = (n) => `₹${n.toLocaleString("en-IN")}`;
+const percent = (n) =>
+  typeof n === "number" && !Number.isNaN(n)
+    ? `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`
+    : "0.00%";
 
-export default function MyPortfolio() {
+export default function MyPortfolio({ portfolio }) {
+  const team = Array.isArray(portfolio?.team) ? portfolio.team : [];
+  const position = portfolio?.totalPoints ?? 0;
+  const pnlPercentage = portfolio?.pnlPercentage ?? 0;
+  const pnlClass = pnlPercentage >= 0 ? "text-green-600" : "text-red-500";
+
+  if (!portfolio) {
+    return (
+      <View className="bg-white mb-2 rounded-lg border border-gray-200 p-4">
+        <Text className="text-gray-500 text-center">
+          Portfolio data will appear here once available.
+        </Text>
+      </View>
+    );
+  }
+
   return (
-    <View className="bg-white  mb-2 rounded-lg border border-gray-200">
-      {/* Position and P&L Summary */}
+    <View className="bg-white mb-2 rounded-lg border border-gray-200">
       <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
         <View className="flex-row items-center space-x-2">
-          <Text className="text-xs text-gray-500">Position</Text>
-          <Text className="font-bold text-black text-base">12</Text>
+          <Text className="text-xs text-gray-500">Points</Text>
+          <Text className="font-bold text-black text-base">{position}</Text>
         </View>
         <View className="flex-row items-center space-x-2">
           <Text className="text-xs text-gray-500">P&amp;L</Text>
-          <Text className="font-bold text-green-500 text-base">+1.50%</Text>
+          <Text className={`font-bold text-base ${pnlClass}`}>
+            {percent(pnlPercentage)}
+          </Text>
         </View>
       </View>
-      {/* Stock Table Headers */}
+
       <View className="flex-row justify-between px-4 py-4 bg-gray-50 border-b border-gray-100">
         <Text className="text-md font-semibold text-gray-600 flex-1">Stock</Text>
-        <Text className="text-md font-semibold text-gray-600 w-40 text-center">Stock Value</Text>
-        <Text className="text-md font-semibold text-gray-600 w-20 text-center">% Sell by</Text>
+        <Text className="text-md font-semibold text-gray-600 w-28 text-center">
+          Buy Price
+        </Text>
+        <Text className="text-md font-semibold text-gray-600 w-16 text-center">
+          Qty
+        </Text>
       </View>
-      {/* Stock Table Rows */}
+
       <ScrollView showsVerticalScrollIndicator={false}>
-        {stocks.map((s, idx) => (
-          <View key={idx} className="flex-row items-center justify-between px-4 py-2 border-b border-gray-100">
-            <Text className="text-sm text-black flex-1">{s.name}</Text>
-            <View className="w-40 items-center">
-              <Text className={`text-sm ${s.positive ? "text-green-700" : "text-red-500"}`}>{currency(s.value)}</Text>
-              <Text className="text-xs text-gray-500">{s.change}</Text>
+        {team.map((member) => (
+          <View
+            key={member._id || member.stockSymbol}
+            className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100"
+          >
+            <View className="flex-1">
+              <View className="flex-row items-center space-x-2">
+                <Text className="text-sm text-black">{member.stockSymbol}</Text>
+                {member.isCaptain && (
+                  <Text className="text-xs text-red-500 font-semibold">C</Text>
+                )}
+                {member.isViceCaptain && (
+                  <Text className="text-xs text-gray-600 font-semibold">
+                    VC
+                  </Text>
+                )}
+              </View>
+              <Text className="text-xs text-gray-500">
+                {member.companyName || member.stockSymbol}
+              </Text>
             </View>
-            <Text className="w-20 text-sm text-black text-center">{s.percent}</Text>
+            <View className="w-28 items-center">
+              <Text className="text-sm text-gray-900">
+                {currency(member.buyPrice)}
+              </Text>
+            </View>
+            <Text className="w-16 text-sm text-black text-center">
+              {member.quantity ?? 0}
+            </Text>
           </View>
         ))}
       </ScrollView>
