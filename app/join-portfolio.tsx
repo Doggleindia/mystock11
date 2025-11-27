@@ -1,4 +1,4 @@
-import { Stack, router } from "expo-router";
+import { Stack, router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Alert,
@@ -17,8 +17,6 @@ import {
     createPortfolioAndJoinContest,
 } from "@/services/portfolioService";
 import usePortfolioStore from "@/store/portfolioStore";
-
-const DEFAULT_CONTEST_ID = "6908269279e9ca9b0a4eb4bd";
 
 const PortfolioSummary = ({
   portfolio,
@@ -70,13 +68,29 @@ const PortfolioSummary = ({
 );
 
 export default function JoinPortfolio() {
+  const { contestId: routeContestId } = useLocalSearchParams<{ contestId?: string }>();
   const { draftPortfolio, clearDraftPortfolio, setLastJoinedContest } =
     usePortfolioStore();
   const [portfolios, setPortfolios] = useState<ContestPortfolioPayload[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isJoining, setIsJoining] = useState(false);
 
-  const contestId = draftPortfolio?.contestId || DEFAULT_CONTEST_ID;
+  // Use contestId from route params, draftPortfolio, or show error
+  const contestId = routeContestId || draftPortfolio?.contestId;
+  
+  // Show alert and redirect if no contestId
+  useEffect(() => {
+    if (!contestId) {
+      Alert.alert('Missing Contest', 'No contest selected. Please go back and select a contest first.', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    }
+  }, [contestId]);
+  
+  // Early return if no contestId - must happen before any JSX that uses contestId
+  if (!contestId) {
+    return null;
+  }
 
   useEffect(() => {
     if (
@@ -206,7 +220,7 @@ export default function JoinPortfolio() {
               CONTEST ID
             </Text>
             <Text className="text-lg font-semibold">
-              #{contestId.slice(-6)}
+              #{contestId ? contestId.slice(-6) : '---'}
             </Text>
             <View className="mt-3 flex-row justify-between">
               <View>

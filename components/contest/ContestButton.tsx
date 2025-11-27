@@ -6,15 +6,28 @@ interface ContestButtonProps {
   timeLeft?: string;
   endTime?: string;
   entryFee?: number;
+  contestId?: string;
+  onPress?: () => void;
 }
 
 const ContestButton = ({
   timeLeft = "1h : 47m",
   endTime = "2:20 PM",
   entryFee = 50,
+  contestId,
+  onPress,
 }: ContestButtonProps) => {
   const handleJoin = () => {
-    router.push('/create-portfolio');
+    if (onPress) {
+      onPress();
+    } else if (contestId) {
+      router.push({
+        pathname: '/create-portfolio',
+        params: { contestId },
+      });
+    } else {
+      router.push('/create-portfolio');
+    }
   };
   return (
     <View className="bg-white px-6 py-3 border-t border-gray-100">

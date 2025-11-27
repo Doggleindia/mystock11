@@ -8,11 +8,9 @@ import StockItem, { Stock } from '@/components/portfolio/StockItem';
 import TableHeader from '@/components/portfolio/TableHeader';
 import { TeamMemberPayload } from '@/services/portfolioService';
 import usePortfolioStore from '@/store/portfolioStore';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
-
-const DEFAULT_CONTEST_ID = '6908269279e9ca9b0a4eb4bd';
 
 const stocks: Stock[] = [
   { symbol: 'HDFCBANK', companyName: 'HDFC Bank Ltd.', sector: 'Banking', price: '2,010.25', change: '-15.35 (-0.75%)', isPositive: false, credits: 9.0, setBy: '75%' },
@@ -30,10 +28,23 @@ const stocks: Stock[] = [
 ];
 
 export default function CreatePortfolio() {
+  const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const [selectedStocks, setSelectedStocks] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState<'stock' | 'credits'>('stock');
   const [searchQuery, setSearchQuery] = useState('');
   const setDraftPortfolio = usePortfolioStore((state) => state.setDraftPortfolio);
+  const draftPortfolio = usePortfolioStore((state) => state.draftPortfolio);
+  
+  // Use contestId from route params, or fallback to draftPortfolio
+  const finalContestId = contestId || draftPortfolio?.contestId;
+  
+  React.useEffect(() => {
+    if (!finalContestId) {
+      Alert.alert('Missing Contest', 'No contest selected. Please go back and select a contest first.', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    }
+  }, [finalContestId]);
 
   const toggleStock = (symbol: string) => {
     const newSelected = new Set(selectedStocks);
@@ -85,7 +96,7 @@ export default function CreatePortfolio() {
     }
 
     setDraftPortfolio({
-      contestId: DEFAULT_CONTEST_ID,
+      contestId: finalContestId,
       team: selectedTeam,
     });
 

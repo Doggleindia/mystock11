@@ -1,4 +1,4 @@
-const BASE_URL = 'http://10.80.197.12:5500/api';
+const BASE_URL = 'http://localhost:5500/api';
 
 export const authService = {
   // Get user profile

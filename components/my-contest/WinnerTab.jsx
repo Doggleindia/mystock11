@@ -8,9 +8,9 @@ import {
   Pressable,
 } from "react-native";
 
-const WinnerTab = () => {
+const WinnerTab = ({ winners: winnersProp = [] }) => {
   const [selectedWinner, setSelectedWinner] = useState(null);
- const winners = [
+  const winners = winnersProp && winnersProp.length ? winnersProp : [
     {
       id: "1",
       name: "Akshay Kumar",

@@ -6,10 +6,12 @@ import ContestRules from "./ContestRules";
 import ContestTabs from "./ContestTabs";
 import Leaderboard from "./Leaderboard";
 import WinningsTable from "./WinningsTable";
+import { useRouter } from "expo-router";
 
 
-export default function ContestDetails(contestData: any) {
+export default function ContestDetails({ contestData }: { contestData: any }) {
   const [activeTab, setActiveTab] = useState<"WINNINGS" | "LEADERBOARD">("WINNINGS");
+  const router = useRouter();
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
@@ -29,8 +31,22 @@ export default function ContestDetails(contestData: any) {
         </View>
       )}
 
-      {/* Timer and Join Button at Bottom */}
-    <ContestButton />
+      {/* Join / View My Contest Button at Bottom */}
+      <ContestButton
+        contestId={contestData?._id}
+        entryFee={contestData?.entryFee}
+        onPress={() => {
+          // Navigate to create portfolio with contest ID
+          if (contestData?._id) {
+            router.push({
+              pathname: "/create-portfolio",
+              params: { contestId: contestData._id },
+            });
+          } else {
+            router.push("/create-portfolio");
+          }
+        }}
+      />
     </ScrollView>
   );
 }

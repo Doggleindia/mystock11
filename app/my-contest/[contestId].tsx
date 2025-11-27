@@ -136,7 +136,29 @@ export default function ContestDetailScreen() {
       );
     }
 
-    return <WinnerTab />;
+    // Winner tab – use leaderboard data from contest snapshot if available
+    const winnersFromApi =
+      Array.isArray((contestInfo as any)?.leaderboard) &&
+      (contestInfo as any).leaderboard.length
+        ? (contestInfo as any).leaderboard.map((row: any, index: number) => ({
+            id: row._id || String(index + 1),
+            name: row.userName || `Rank ${row.rank ?? index + 1}`,
+            portfolio: `Rank ${row.rank ?? index + 1}`,
+            prize:
+              typeof row.prizeAmount === "number"
+                ? `₹${row.prizeAmount.toLocaleString("en-IN")}`
+                : "-",
+            pool:
+              typeof contestInfo?.pricePool === "number"
+                ? `₹${contestInfo.pricePool.toLocaleString("en-IN")}`
+                : "-",
+            image:
+              row.avatarUrl ||
+              "https://ui-avatars.com/api/?name=W&background=0D8ABC&color=fff",
+          }))
+        : [];
+
+    return <WinnerTab winners={winnersFromApi} />;
   };
 
   return (
