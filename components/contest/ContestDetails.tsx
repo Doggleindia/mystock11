@@ -7,12 +7,13 @@ import ContestTabs from "./ContestTabs";
 import Leaderboard from "./Leaderboard";
 import WinningsTable from "./WinningsTable";
 
-export default function ContestDetails() {
+
+export default function ContestDetails(contestData: any) {
   const [activeTab, setActiveTab] = useState<"WINNINGS" | "LEADERBOARD">("WINNINGS");
 
   return (
     <ScrollView className="flex-1 bg-gray-50">
-      <ContestDetailCard />
+      <ContestDetailCard contestData={contestData}/>
       <ContestRules />
       
       <ContestTabs 

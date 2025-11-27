@@ -31,11 +31,13 @@ const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
     maxEntryRange: FilterRange | null;
     prizePoolRange: FilterRange | null;
     spotsRange: FilterRange | null;
+    category: FilterRange | null;
   }>({
     entryRange: null,
     maxEntryRange: null,
     prizePoolRange: null,
     spotsRange: null,
+    category: null,
   });
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL  || Constants.expoConfig?.extra?.API_BASE_URL;
@@ -73,7 +75,7 @@ const API_BASE_URL =
   if (selectedTabKey) {
     fetchContestsForMatch(selectedTabKey);
   }
-}, [selectedTabKey]);
+}, [selectedTabKey,sort]);
 
 function normalizeContestApiData(apiData :any[]) {
   // Handle empty or unexpected cases gracefully
@@ -102,7 +104,7 @@ function normalizeContestApiData(apiData :any[]) {
 async function fetchContestsForMatch(matchId:any) {
   setLoadingContests(true);
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/contests/user/match/${matchId}`);
+    const res = await axios.get(`${API_BASE_URL}/api/contests/user/match/${matchId}?sort=${sort}`);
     // Your API might return {data: [...]}, {contests: [...]}, or just an array
     const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
     setNiftyData(normalizeContestApiData(raw));

@@ -3,15 +3,16 @@ import { router } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
-const ContestDetailCard = () => {
+const ContestDetailCard = (contestData:any) => {
   const handleJoin = () => {
       router.push('/create-portfolio');
     };
+    console.log(contestData?.contestData?.contestData,"come in detail card")
   return (
     <View className="bg-white rounded-xl mx-4 mt-4 p-4 shadow-sm">
       {/* Header Row */}
       <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-lg font-bold text-black">Daily Trading Challenge</Text>
+        <Text className="text-lg font-bold text-black">{contestData?.name}</Text>
         <Ionicons name="notifications-outline" size={20} color="#444" />
       </View>
 
