@@ -5,6 +5,7 @@ import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from "../services/authService";
+import { API_BASE_URL } from "../services/config";
 import { useAuthStore } from "../store/authStore";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../services/firebaseConfig";
@@ -69,7 +70,7 @@ export default function SignUpScreen() {
       const result = await signInWithPopup(auth, provider);
       const idToken = await result.user.getIdToken();
 
-      const res = await fetch("http://localhost:5500/api/auth/firebase/google-signup", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/firebase/google-signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),

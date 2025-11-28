@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { authService } from "../services/authService";
+import { API_BASE_URL } from "../services/config";
 import { useAuthStore } from "../store/authStore";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../services/firebaseConfig";
@@ -37,7 +38,7 @@ export default function Login() {
       const idToken = await result.user.getIdToken();
 
       // Send Firebase token to backend
-      const res = await fetch("http://localhost:5500/api/auth/firebase/google-login", {
+      const res = await fetch(`${API_BASE_URL}/api/auth/firebase/google-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),

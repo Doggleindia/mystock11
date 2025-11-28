@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { View, Image, FlatList, Dimensions } from "react-native";
 import axios from "axios";
-import Constants from "expo-constants";
+import { API_BASE_URL } from "@/services/config";
 const { width } = Dimensions.get("window");
 
 export default function BannerCarousel() {
@@ -10,13 +10,12 @@ export default function BannerCarousel() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL  || Constants.expoConfig?.extra?.API_BASE_URL;
-console.log(API_BASE_URL,"this is the base url", process.env.EXPO_PUBLIC_API_BASE_URL ,Constants.expoConfig?.extra?.API_BASE_URL)
   useEffect(() => {
     const fetchBanners = async () => {
+      console.log("API_BASE_URL", API_BASE_URL);
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/admin/banner/all`);
+        const res = await axios.get(`http://192.168.1.10:5500/api/admin/banner/all`);
+        console.log("res", res.data);
         const activeBanners = res.data?.banners?.filter(b => b.isActive);
         setBanners(activeBanners || []);
       } catch (error) {

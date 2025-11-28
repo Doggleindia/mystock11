@@ -4,7 +4,7 @@ import FilterBar from "@/components/home/FilterBar";
 import Header from "@/components/home/Header";
 import SegmentedTabs from "@/components/home/SegmentedTabs";
 import axios from "axios";
-import Constants from "expo-constants";
+import { API_BASE_URL } from "@/services/config";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -39,8 +39,6 @@ const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
     spotsRange: null,
     category: null,
   });
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL  || Constants.expoConfig?.extra?.API_BASE_URL;
   // MATCHES: a simple list of matches to display (id + name)
   const [matches, setMatches] = useState<Array<{ id: string; name: string }>>(
     []
