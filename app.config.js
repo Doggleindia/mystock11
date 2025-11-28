@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "http://192.168.1.10:5500";
+const DEFAULT_API_BASE_URL = "http://10.113.29.12:5500";
 
 export default {
   expo: {

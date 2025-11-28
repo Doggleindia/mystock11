@@ -19,7 +19,7 @@ const ContestDetailCard = (props: any) => {
     router.push("/create-portfolio");
   };
 
-  console.log("ContestDetailCard contest:", contest);
+  // console.log("ContestDetailCard contest:", contest);
 
   return (
     <View className="bg-white rounded-xl mx-4 mt-4 p-4 shadow-sm">

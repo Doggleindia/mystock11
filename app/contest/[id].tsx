@@ -36,7 +36,7 @@ export default function ContestDetails() {
     fetchContest();
   }, [id]);
 
-  console.log(contest,"contestData")
+  // console.log(contest,"contestData")
   return (
     <>
       <Stack.Screen

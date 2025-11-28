@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState } from "react";
-import { View, Image, FlatList, Dimensions } from "react-native";
-import axios from "axios";
 import { API_BASE_URL } from "@/services/config";
+import axios from "axios";
+import { useEffect, useRef, useState } from "react";
+import { Dimensions, FlatList, Image, View } from "react-native";
 const { width } = Dimensions.get("window");
 
 export default function BannerCarousel() {
@@ -14,7 +14,7 @@ export default function BannerCarousel() {
     const fetchBanners = async () => {
       console.log("API_BASE_URL", API_BASE_URL);
       try {
-        const res = await axios.get(`http://192.168.1.10:5500/api/admin/banner/all`);
+        const res = await axios.get(`http://10.113.29.12:5500/api/admin/banner/all`);
         console.log("res", res.data);
         const activeBanners = res.data?.banners?.filter(b => b.isActive);
         setBanners(activeBanners || []);
