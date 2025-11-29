@@ -13,15 +13,12 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  
 console.log("come")
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="Index">
-        <Stack.Screen name="Index" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="Onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="Login" options={{ headerShown: false }} />
         <Stack.Screen name="Signup" options={{ headerShown: false }} />

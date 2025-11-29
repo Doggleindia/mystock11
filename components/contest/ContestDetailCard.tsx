@@ -16,7 +16,7 @@ const ContestDetailCard = (props: any) => {
   const firstPrize = contest?.prizeDistribution?.[0]?.prizeAmount ?? contest?.firstPrize ?? Math.floor(prizePool * 0.1);
 
   const handleJoin = () => {
-    router.push("/create-portfolio");
+    router.push("/create-portfolio/?contestId=" + (contest?._id || contest?.id));
   };
 
   // console.log("ContestDetailCard contest:", contest);

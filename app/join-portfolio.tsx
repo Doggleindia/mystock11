@@ -1,11 +1,16 @@
-import { Stack, router, useLocalSearchParams } from "expo-router";
+import {
+  Stack,
+  router,
+  useLocalSearchParams,
+  useRootNavigationState,
+} from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 
@@ -13,8 +18,8 @@ import MarketOverview from "@/components/portfolio/MarketOverview";
 import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
 import TableHeader from "@/components/portfolio/TableHeader";
 import {
-    ContestPortfolioPayload,
-    createPortfolioAndJoinContest,
+  ContestPortfolioPayload,
+  createPortfolioAndJoinContest,
 } from "@/services/portfolioService";
 import usePortfolioStore from "@/store/portfolioStore";
 
@@ -37,7 +42,9 @@ const PortfolioSummary = ({
   >
     <View className="flex-row justify-between mb-3">
       <Text className="font-semibold text-base">Portfolio {index + 1}</Text>
-      <Text className="text-xs text-gray-500">{portfolio.team.length} Stocks</Text>
+      <Text className="text-xs text-gray-500">
+        {portfolio.team.length} Stocks
+      </Text>
     </View>
     <View className="flex-row justify-between mb-2">
       <Text className="text-xs text-gray-500">Captain</Text>
@@ -55,11 +62,17 @@ const PortfolioSummary = ({
         >
           <View>
             <Text className="font-medium">{member.stockSymbol}</Text>
-            <Text className="text-xs text-gray-500">{member.companyName}</Text>
+            <Text className="text-xs text-gray-500">
+              {member.companyName}
+            </Text>
           </View>
           <View className="items-end">
-            <Text className="font-semibold">₹{member.buyPrice.toFixed(2)}</Text>
-            <Text className="text-xs text-gray-500">Qty: {member.quantity}</Text>
+            <Text className="font-semibold">
+              ₹{member.buyPrice.toFixed(2)}
+            </Text>
+            <Text className="text-xs text-gray-500">
+              Qty: {member.quantity}
+            </Text>
           </View>
         </View>
       ))}
@@ -68,30 +81,22 @@ const PortfolioSummary = ({
 );
 
 export default function JoinPortfolio() {
-  const { contestId: routeContestId } = useLocalSearchParams<{ contestId?: string }>();
+  const { contestId: routeContestId } =
+    useLocalSearchParams<{ contestId?: string }>();
+  const rootNavigationState = useRootNavigationState();
+
   const { draftPortfolio, clearDraftPortfolio, setLastJoinedContest } =
     usePortfolioStore();
+
   const [portfolios, setPortfolios] = useState<ContestPortfolioPayload[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isJoining, setIsJoining] = useState(false);
 
-  // Use contestId from route params, draftPortfolio, or show error
+  // Stable value; don't early-return based on this
   const contestId = routeContestId || draftPortfolio?.contestId;
-  
-  // Show alert and redirect if no contestId
-  useEffect(() => {
-    if (!contestId) {
-      Alert.alert('Missing Contest', 'No contest selected. Please go back and select a contest first.', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    }
-  }, [contestId]);
-  
-  // Early return if no contestId - must happen before any JSX that uses contestId
-  if (!contestId) {
-    return null;
-  }
+  const hasContest = !!contestId;
 
+  // Hydrate portfolios from draft store
   useEffect(() => {
     if (
       draftPortfolio?.team?.length &&
@@ -121,35 +126,52 @@ export default function JoinPortfolio() {
   );
 
   const handleJoinContest = useCallback(async () => {
+    if (!hasContest) {
+      Alert.alert(
+        "No contest",
+        "No contest selected. Please go back and select a contest first."
+      );
+      return;
+    }
+
     if (!activePortfolio) {
-      Alert.alert("No portfolio", "Please select or create a portfolio first.");
+      Alert.alert(
+        "No portfolio",
+        "Please select or create a portfolio first."
+      );
       return;
     }
 
     if (!activePortfolio.captain || !activePortfolio.viceCaptain) {
-      Alert.alert("Missing leaders", "Captain and vice captain are required.");
+      Alert.alert(
+        "Missing leaders",
+        "Captain and vice captain are required."
+      );
       return;
     }
+
     try {
       setIsJoining(true);
+
       const payload: ContestPortfolioPayload = {
         ...activePortfolio,
         team: activePortfolio.team.map((member) => ({
           ...member,
           isCaptain: member.stockSymbol === activePortfolio.captain,
-          isViceCaptain: member.stockSymbol === activePortfolio.viceCaptain,
+          isViceCaptain:
+            member.stockSymbol === activePortfolio.viceCaptain,
         })),
       };
 
       const joinResponse = await createPortfolioAndJoinContest(
-        contestId,
+        contestId as string,
         payload
       );
 
       const summaryData = joinResponse?.data;
       if (summaryData) {
         setLastJoinedContest({
-          contestId,
+          contestId: contestId as string,
           portfolio: summaryData.portfolio ?? null,
           transactionId: summaryData.transaction ?? null,
           message: joinResponse?.message,
@@ -162,30 +184,37 @@ export default function JoinPortfolio() {
         text2: "Redirecting you to My Contest…",
       });
 
+      const doNavigate = () => {
+        if (!rootNavigationState?.key) return;
+        router.replace("/my-contest");
+      };
+
       Alert.alert(
         "Joined successfully",
         joinResponse?.message ||
           "Your portfolio has been entered into the contest.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/my-contest"),
-          },
-        ]
+        [{ text: "OK", onPress: doNavigate }]
       );
-      // Also navigate automatically in case the Alert is dismissed on web
-      router.replace("/my-contest");
+
       clearDraftPortfolio();
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
         error?.message ||
         "Unable to join the contest right now.";
+      console.log(error, "contest joined error");
       Alert.alert("Join failed", message);
     } finally {
       setIsJoining(false);
     }
-  }, [activePortfolio, contestId, clearDraftPortfolio]);
+  }, [
+    activePortfolio,
+    clearDraftPortfolio,
+    contestId,
+    hasContest,
+    rootNavigationState,
+    setLastJoinedContest,
+  ]);
 
   const handleAddPortfolio = useCallback(() => {
     router.replace("/create-portfolio");
@@ -206,105 +235,127 @@ export default function JoinPortfolio() {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 bg-white">
-        <PortfolioHeader timeLeft="1h : 47m" />
-        <MarketOverview
-          index="NIFTY 50"
-          value="24,827.45"
-          change="-28.15"
-          changePercent="-0.15%"
-        />
+        {!hasContest ? (
+          // Fallback UI when there is no contestId
+          <View className="flex-1 items-center justify-center px-4">
+            <Text className="text-center mb-3">
+              No contest selected. Please go back and select a contest.
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              className="border border-gray-200 px-4 py-2 rounded"
+            >
+              <Text>Go back</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <PortfolioHeader timeLeft="1h : 47m" />
+            <MarketOverview
+              index="NIFTY 50"
+              value="24,827.45"
+              change="-28.15"
+              changePercent="-0.15%"
+            />
 
-        <ScrollView className="flex-1 px-4 pt-4">
-          <View className="mb-4 rounded-xl bg-gray-50 p-4">
-            <Text className="text-xs font-semibold text-gray-500 tracking-widest mb-1">
-              CONTEST ID
-            </Text>
-            <Text className="text-lg font-semibold">
-              #{contestId ? contestId.slice(-6) : '---'}
-            </Text>
-            <View className="mt-3 flex-row justify-between">
-              <View>
-                <Text className="text-xs text-gray-500">Entry Fee</Text>
-                <Text className="text-base font-semibold text-green-600">₹50</Text>
+            <ScrollView className="flex-1 px-4 pt-4">
+              <View className="mb-4 rounded-xl bg-gray-50 p-4">
+                <Text className="text-xs font-semibold text-gray-500 tracking-widest mb-1">
+                  CONTEST ID
+                </Text>
+                <Text className="text-lg font-semibold">
+                  #{contestId ? contestId.slice(-6) : "---"}
+                </Text>
+                <View className="mt-3 flex-row justify-between">
+                  <View>
+                    <Text className="text-xs text-gray-500">Entry Fee</Text>
+                    <Text className="text-base font-semibold text-green-600">
+                      ₹50
+                    </Text>
+                  </View>
+                  <View className="items-end">
+                    <Text className="text-xs text-gray-500">
+                      Portfolios Joined
+                    </Text>
+                    <Text className="text-base font-semibold">
+                      {portfolios.length} / 11
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <View className="items-end">
-                <Text className="text-xs text-gray-500">Portfolios Joined</Text>
+
+              <TableHeader />
+
+              {portfolios.length > 0 ? (
+                portfolios.map((portfolio, index) => (
+                  <PortfolioSummary
+                    key={`portfolio-${index}`}
+                    portfolio={portfolio}
+                    index={index}
+                    isActive={index === activeIndex}
+                    onSelect={() => setActiveIndex(index)}
+                  />
+                ))
+              ) : (
+                <View className="py-10 items-center">
+                  <Text className="text-gray-500 mb-2">
+                    No portfolios ready to join.
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleAddPortfolio}
+                    className="border border-gray-200 px-4 py-2 rounded"
+                  >
+                    <Text className="text-gray-700 font-semibold">
+                      Create one now
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </ScrollView>
+
+            <View className="bg-white border-t border-gray-100 px-4 py-4">
+              <View className="flex-row justify-between mb-3">
+                <Text className="text-sm text-gray-500">Credits in play</Text>
                 <Text className="text-base font-semibold">
-                  {portfolios.length} / 11
+                  ₹{totalCredits.toFixed(2)}
                 </Text>
               </View>
-            </View>
-          </View>
 
-          <TableHeader />
+              {portfolios.length > 0 && (
+                <TouchableOpacity
+                  onPress={handleCloneActive}
+                  className="mb-3 rounded-lg border border-dashed border-green-500 py-3"
+                >
+                  <Text className="text-center font-semibold text-green-600">
+                    Duplicate active portfolio
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-          {portfolios.length > 0 ? (
-            portfolios.map((portfolio, index) => (
-              <PortfolioSummary
-                key={`portfolio-${index}`}
-                portfolio={portfolio}
-                index={index}
-                isActive={index === activeIndex}
-                onSelect={() => setActiveIndex(index)}
-              />
-            ))
-          ) : (
-            <View className="py-10 items-center">
-              <Text className="text-gray-500 mb-2">
-                No portfolios ready to join.
-              </Text>
               <TouchableOpacity
                 onPress={handleAddPortfolio}
-                className="border border-gray-200 px-4 py-2 rounded"
+                className="mb-3 rounded-lg border border-gray-200 py-3"
               >
-                <Text className="text-gray-700 font-semibold">
-                  Create one now
+                <Text className="text-center font-semibold text-gray-800">
+                  Create another portfolio
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleJoinContest}
+                disabled={isJoining}
+                className={`rounded-lg py-3 ${
+                  isJoining ? "bg-green-300" : "bg-green-600"
+                }`}
+              >
+                <Text className="text-center font-semibold text-white">
+                  {isJoining ? "Joining..." : "Join contest"}
                 </Text>
               </TouchableOpacity>
             </View>
-          )}
-        </ScrollView>
-
-        <View className="bg-white border-t border-gray-100 px-4 py-4">
-          <View className="flex-row justify-between mb-3">
-            <Text className="text-sm text-gray-500">Credits in play</Text>
-            <Text className="text-base font-semibold">₹{totalCredits.toFixed(2)}</Text>
-          </View>
-
-          {portfolios.length > 0 && (
-            <TouchableOpacity
-              onPress={handleCloneActive}
-              className="mb-3 rounded-lg border border-dashed border-green-500 py-3"
-            >
-              <Text className="text-center font-semibold text-green-600">
-                Duplicate active portfolio
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            onPress={handleAddPortfolio}
-            className="mb-3 rounded-lg border border-gray-200 py-3"
-          >
-            <Text className="text-center font-semibold text-gray-800">
-              Create another portfolio
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={handleJoinContest}
-            disabled={isJoining}
-            className={`rounded-lg py-3 ${
-              isJoining ? "bg-green-300" : "bg-green-600"
-            }`}
-          >
-            <Text className="text-center font-semibold text-white">
-              {isJoining ? "Joining..." : "Join contest"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </View>
     </>
   );
 }
-

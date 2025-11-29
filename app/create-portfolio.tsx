@@ -37,7 +37,7 @@ export default function CreatePortfolio() {
   
   // Use contestId from route params, or fallback to draftPortfolio
   const finalContestId = contestId || draftPortfolio?.contestId;
-  
+  console.log(finalContestId,"finalContestId")
   React.useEffect(() => {
     if (!finalContestId) {
       Alert.alert('Missing Contest', 'No contest selected. Please go back and select a contest first.', [
@@ -85,6 +85,7 @@ export default function CreatePortfolio() {
   }, [selectedStocks]);
 
   const handleProceed = () => {
+
     if (!canProceed) {
       Alert.alert('Select stocks', 'Please select exactly 11 stocks to continue.');
       return;
