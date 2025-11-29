@@ -6,7 +6,7 @@ import { useAuthStore } from '../store/authStore';
 
 const SplashScreen = () => {
   const navigation = useNavigation();
-  const { token, getStoredAuth } = useAuthStore();
+  const { isAuthenticated, getStoredAuth } = useAuthStore();
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -17,8 +17,11 @@ const SplashScreen = () => {
         // Add a small delay for splash screen visibility
         await new Promise(resolve => setTimeout(resolve, 2000));
 
+        // Check authentication after a brief delay to allow state update
+        const { isAuthenticated: isAuth } = useAuthStore.getState();
+        
         // Navigate based on auth status
-        if (token) {
+        if (isAuth) {
           navigation.replace('(tabs)');
         } else {
           navigation.replace('Onboarding');
@@ -30,7 +33,7 @@ const SplashScreen = () => {
     };
 
     initializeApp();
-  }, [navigation, token, getStoredAuth]);
+  }, [navigation]);
 
   return (
     <>

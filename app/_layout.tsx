@@ -17,19 +17,19 @@ export default function RootLayout() {
     // Async font loading only occurs in development.
     return null;
   }
-
+console.log("come")
   return (
-    <>
-      <Toast />
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-         <Stack.Screen name="Splash"  />
-        <Stack.Screen name="Onboarding"  />
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="Splash">
+        <Stack.Screen name="Splash" options={{ headerShown: false }} />
+        <Stack.Screen name="Onboarding" options={{ headerShown: false }} />
+        <Stack.Screen name="Login" options={{ headerShown: false }} />
+        <Stack.Screen name="Signup" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
+      <Toast />
     </ThemeProvider>
-    </>
   );
 }

@@ -1,16 +1,15 @@
-import ContestCard from "@/components/my-contest/ContestCard";
-import ContestTabs from "@/components/my-contest/ContestTabs";
 import Header from "@/components/my-contest/Header";
-
 import React from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 const contests = () => {
   return (
     <>
       <Header title="My Contest" />
-      <ScrollView className="bg-gray-100">
-        <ContestTabs />
+      <ScrollView className="bg-gray-100 flex-1">
+        <View className="p-4">
+          <Text className="text-gray-600">No contests available yet.</Text>
+        </View>
       </ScrollView>
     </>
   );

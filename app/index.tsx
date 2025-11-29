@@ -3,8 +3,8 @@ import ContestCard, { Contest } from "@/components/home/ContestCard";
 import FilterBar from "@/components/home/FilterBar";
 import Header from "@/components/home/Header";
 import SegmentedTabs from "@/components/home/SegmentedTabs";
-import axios from "axios";
 import { API_BASE_URL } from "@/services/config";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -162,12 +162,12 @@ async function fetchContestsForMatch(matchId:any) {
   };
 
   const filteredData = filterContests(niftyData);
-
+console.log("first")
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
       <FlatList
         data={filteredData}
-        keyExtractor={(it) => it.id}
+        keyExtractor={(it, index) => it.id || `contest-${index}`}
         ListHeaderComponent={
           <View>
             <Header />
@@ -184,28 +184,25 @@ async function fetchContestsForMatch(matchId:any) {
               {loadingMatches ? (
                 <ActivityIndicator />
               ) : (
-                <FlatList
-                  data={matches}
-                  keyExtractor={(m) => m.id}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  renderItem={({ item }) => (
+                <View style={{ flexDirection: 'row', overflow: 'hidden' }}>
+                  {matches.map((m) => (
                     <TouchableOpacity
-                      onPress={() => fetchContestsForMatch(item.id)}
+                      key={m._id || m.id}
+                      onPress={() => fetchContestsForMatch(m._id || m.id)}
                       style={{
                         marginRight: 8,
                         paddingVertical: 8,
                         paddingHorizontal: 12,
-                        backgroundColor: item.id === selectedMatchId ? "#e6f0ff" : "#fff",
+                        backgroundColor: (m._id || m.id) === selectedMatchId ? "#e6f0ff" : "#fff",
                         borderRadius: 8,
                         borderWidth: 1,
                         borderColor: "#eee",
                       }}
                     >
-                      <Text>{item.name}</Text>
+                      <Text>{m.name || m.title}</Text>
                     </TouchableOpacity>
-                  )}
-                />
+                  ))}
+                </View>
               )}
             </View>
 
