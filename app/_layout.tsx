@@ -20,8 +20,8 @@ export default function RootLayout() {
 console.log("come")
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="Splash">
-        <Stack.Screen name="Splash" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }} initialRouteName="Index">
+        <Stack.Screen name="Index" options={{ headerShown: false }} />
         <Stack.Screen name="Onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="Login" options={{ headerShown: false }} />
         <Stack.Screen name="Signup" options={{ headerShown: false }} />

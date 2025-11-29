@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/authStore';
 const SplashScreen = () => {
   const navigation = useNavigation();
   const { isAuthenticated, getStoredAuth } = useAuthStore();
-
+console.log("come in splash")
   useEffect(() => {
     const initializeApp = async () => {
       try {
