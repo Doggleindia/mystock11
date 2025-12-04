@@ -180,31 +180,7 @@ console.log("first")
 
 
             {/* Matches list */}
-            <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-              {loadingMatches ? (
-                <ActivityIndicator />
-              ) : (
-                <View style={{ flexDirection: 'row', overflow: 'hidden' }}>
-                  {matches.map((m) => (
-                    <TouchableOpacity
-                      key={m._id || m.id}
-                      onPress={() => fetchContestsForMatch(m._id || m.id)}
-                      style={{
-                        marginRight: 8,
-                        paddingVertical: 8,
-                        paddingHorizontal: 12,
-                        backgroundColor: (m._id || m.id) === selectedMatchId ? "#e6f0ff" : "#fff",
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: "#eee",
-                      }}
-                    >
-                      <Text>{m.name || m.title}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
+          
 
             <FilterBar
               sort={sort}

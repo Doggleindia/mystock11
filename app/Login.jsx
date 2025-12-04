@@ -1,12 +1,12 @@
 import { useNavigation } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import { signInWithPopup } from "firebase/auth";
 import { useState } from "react";
 import { Alert, Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { authService } from "../services/authService";
 import { API_BASE_URL } from "../services/config";
-import { useAuthStore } from "../store/authStore";
-import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../services/firebaseConfig";
+import { useAuthStore } from "../store/authStore";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -111,8 +111,8 @@ export default function Login() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text className="text-green-700 text-xs text-right mb-5 mt-1 font-semibold">
+        <TouchableOpacity onPress={() => navigation.replace("ForgotPassword")} >
+          <Text className="text-[#16a34a] text-xs text-right mb-5 mt-1 font-semibold">
             Forgot password?
           </Text>
         </TouchableOpacity>

@@ -3,9 +3,8 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
-import Toast from 'react-native-toast-message';
-
 import { useColorScheme } from '@/hooks/useColorScheme';
+import Toast from 'react-native-toast-message';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -13,8 +12,7 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  
-console.log("come")
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }} initialRouteName="index">
@@ -26,7 +24,7 @@ console.log("come")
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
-      <Toast />
+    <Toast />
     </ThemeProvider>
   );
 }

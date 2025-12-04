@@ -1,18 +1,19 @@
 import { Stack, useRouter } from 'expo-router';
 import { useAuthStore } from '../../store/authStore';
+import { useEffect } from 'react';
 
 export default function ProfileWebScreen() {
   const router = useRouter();
   const { user, fetchProfile, logout } = useAuthStore();
   
-  useEffect(() => {
+  useEffect (() => {
     fetchProfile();
   }, []);
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.replace('/login');
+      router.replace('/Login');
     } catch (error) {
       alert(error.message);
     }

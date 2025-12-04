@@ -33,7 +33,7 @@ export default function ProfileHomeScreen() {
     try {
       await logout();
       setLogoutModalVisible(false);
-      router.replace('/login');
+      router.replace('/Login');
     } catch (error) {
       Alert.alert('Error', error.message);
       setLogoutModalVisible(false);
