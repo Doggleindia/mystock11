@@ -147,4 +147,58 @@ export const authService = {
       throw error;
     }
   },
+
+  // Update user profile
+  async updateProfile(token, profileData) {
+    try {
+      const response = await fetch(`${BASE_URL}/user-profile/profile`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  // Upload avatar
+  async uploadAvatar(token, formData) {
+    try {
+      console.log('Uploading avatar with token:', token?.substring(0, 20) + '...');
+      console.log('FormData entries:', Array.from(formData.entries()));
+      
+      const response = await fetch(`${BASE_URL}/user-profile/update-avatar`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType?.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.log('Response text:', text);
+        data = { message: text };
+      }
+      
+      console.log('Upload response:', { status: response.status, ok: response.ok, data });
+      
+      if (!response.ok) throw new Error(data.message || `Upload failed with status ${response.status}`);
+      return data;
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      throw error;
+    }
+  },
 };

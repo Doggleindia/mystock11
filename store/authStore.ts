@@ -17,6 +17,11 @@ interface UserProfile {
   username: string;
   bio: string;
   level: number;
+  gender?: string;
+  dob?: string;
+  language?: string;
+  theme?: string;
+  totalEarnings?: number;
   [key: string]: any;
 }
 
@@ -30,6 +35,8 @@ interface AuthState {
   isAuthenticated: boolean;
   getStoredAuth: () => Promise<void>;
   fetchProfile: () => Promise<void>;
+  updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
+  uploadAvatar: (formData: FormData) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -85,4 +92,54 @@ export const useAuthStore = create<AuthState>((set) => ({
       throw error;
     }
   },
+
+  updateProfile: async (profileData: Partial<UserProfile>) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const response = await authService.updateProfile(token, profileData);
+      set((state) => ({
+        user: state.user ? { ...state.user, ...profileData } : null,
+      } as any));
+      return response;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  },
+
+  uploadAvatar: async (formData: FormData) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      const response = await authService.uploadAvatar(token, formData);
+      const avatarUrl = response.avatar || response.data?.avatar;
+      set((state) => ({
+        user: state.user ? { ...state.user, avatar: avatarUrl } : null,
+      } as any));
+      return response;
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      throw error;
+    }
+  },
 }));
+
+// Helper function to upload avatar
+const uploadAvatarHelper = async (uri: string, filename: string, type: string) => {
+  const formData = new FormData();
+  if (uri.startsWith('blob:')) {
+    // Web platform - fetch blob and append
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    formData.append('avatar', blob, filename);
+  } else {
+    // Native platform - append uri object
+    formData.append('avatar', {
+      uri: uri,
+      type: type,
+      name: filename,
+    });
+  }
+  return formData;
+};

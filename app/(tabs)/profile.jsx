@@ -1,3 +1,4 @@
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -15,9 +16,10 @@ export default function ProfileHomeScreen() {
   const router = useRouter();
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const { user, logout, fetchProfile } = useAuthStore();
+  const { user, logout, fetchProfile, uploadAvatar } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   
   // Fetch profile data on component mount
   useEffect(() => {
@@ -36,7 +38,76 @@ export default function ProfileHomeScreen() {
 
     loadProfileData();
   }, [fetchProfile]);
-console.log(user,"userData")
+
+  const handlePhotoUpload = async (useCamera = false) => {
+    try {
+      setUploadingPhoto(true);
+      
+      let result;
+      if (useCamera) {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (permission.status !== 'granted') {
+          Alert.alert('Permission Denied', 'We need camera permission to take photos');
+          setUploadingPhoto(false);
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+      } else {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (permission.status !== 'granted') {
+          Alert.alert('Permission Denied', 'We need permission to access your gallery');
+          setUploadingPhoto(false);
+          return;
+        }
+        result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+      }
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const uri = asset.uri;
+        const filename = uri.split('/').pop() || 'avatar_' + Date.now() + '.jpg';
+        const type = asset.mimeType || 'image/jpeg';
+        
+        // For web (blob URIs), fetch the blob; for native, use uri directly
+        const formData = new FormData();
+        
+        if (uri.startsWith('blob:')) {
+          // Web platform - fetch blob and append
+          const response = await fetch(uri);
+          const blob = await response.blob();
+          formData.append('profileCover', blob, filename);
+        } else {
+          // Native platform - append uri object
+          formData.append('profileCover', {
+            uri: uri,
+            type: type,
+            name: filename,
+          });
+        }
+
+        console.log('Uploading photo:', { uri, filename, type, isBlob: uri.startsWith('blob:') });
+        await uploadAvatar(formData);
+        await fetchProfile(); // Refresh profile data
+        Alert.alert('Success', 'Profile photo updated successfully');
+        setPhotoModalVisible(false);
+      }
+    } catch (err) {
+      console.error('Photo upload error:', err);
+      Alert.alert('Error', err.message || 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleOptionPress = (route, label) => {
     if (label === "Logout") {
       setLogoutModalVisible(true);
@@ -106,7 +177,7 @@ console.log(user,"userData")
               activeOpacity={0.8}
             >
               <Image 
-                source={{ uri: user?.user?.avatar || 'https://randomuser.me/api/portraits/women/10.jpg' }} 
+                source={{ uri: user?.user?.profileCover  }} 
                 className="w-16 h-16 rounded-full"
               />
               <View className="absolute bottom-0 right-0 bg-gray-800 rounded-full p-1 border-2 border-white">
@@ -118,7 +189,7 @@ console.log(user,"userData")
             </TouchableOpacity>
             <View className="ml-3 flex-1">
               <Text className="text-black text-lg font-bold">
-                {user ? `${user?.user?.firstName} ${user.user.lastName}`.trim() : 'User'}
+                {user ? `${user?.user?.firstName} ${user?.user?.lastName}`.trim() : 'User'}
               </Text>
               <Text className="text-gray-600 text-xs mt-1">Level {user?.user?.level || 1}</Text>
             </View>
@@ -132,12 +203,12 @@ console.log(user,"userData")
             </View>
             <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
               <Text className="text-xs text-gray-600 mb-1 font-semibold">Wins</Text>
-              <Text className="text-base font-bold text-gray-900">{user?.totalWins || 0}</Text>
+              <Text className="text-base font-bold text-gray-900">{user?.user?.totalWins || 0}</Text>
             </View>
             <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
               <Text className="text-xs text-gray-600 mb-1 font-semibold">Win Rate</Text>
               <Text className="text-base font-bold text-gray-900">
-                {user?.user?.totalContests ? ((user.user.totalWins / user.user.totalContests) * 100).toFixed(1) : 0}%
+                {user?.user?.totalContests ? ((user?.user?.totalWins / user?.user?.totalContests) * 100).toFixed(1) : 0}%
               </Text>
             </View>
           </View>
@@ -199,20 +270,26 @@ console.log(user,"userData")
             
             <TouchableOpacity 
               className="w-full flex-row items-center py-3 px-4 mb-2 rounded-lg border border-gray-300 bg-gray-50 active:bg-gray-100"
-              onPress={() => {/* gallery upload handler */}}
+              onPress={() => handlePhotoUpload(false)}
               activeOpacity={0.7}
+              disabled={uploadingPhoto}
             >
               <Text className="text-xl mr-3">🖼️</Text>
-              <Text className="text-sm text-gray-800 font-semibold">Upload From Gallery</Text>
+              <Text className="text-sm text-gray-800 font-semibold">
+                {uploadingPhoto ? 'Uploading...' : 'Upload From Gallery'}
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               className="w-full flex-row items-center py-3 px-4 rounded-lg border border-gray-300 bg-gray-50 active:bg-gray-100"
-              onPress={() => {/* camera upload handler */}}
+              onPress={() => handlePhotoUpload(true)}
               activeOpacity={0.7}
+              disabled={uploadingPhoto}
             >
               <Text className="text-xl mr-3">📸</Text>
-              <Text className="text-sm text-gray-800 font-semibold">Take a Photo</Text>
+              <Text className="text-sm text-gray-800 font-semibold">
+                {uploadingPhoto ? 'Uploading...' : 'Take a Photo'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
