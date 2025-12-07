@@ -1,6 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Modal, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useAuthStore } from '../../store/authStore';
 
 const options = [
@@ -15,12 +15,28 @@ export default function ProfileHomeScreen() {
   const router = useRouter();
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
-  const { user, fetchProfile, logout } = useAuthStore();
+  const { user, logout, fetchProfile } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
+  // Fetch profile data on component mount
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    const loadProfileData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        await fetchProfile();
+      } catch (err) {
+        console.error('Error loading profile:', err);
+        setError(err.message || 'Failed to load profile data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
+    loadProfileData();
+  }, [fetchProfile]);
+console.log(user,"userData")
   const handleOptionPress = (route, label) => {
     if (label === "Logout") {
       setLogoutModalVisible(true);
@@ -31,185 +47,233 @@ export default function ProfileHomeScreen() {
 
   const handleLogout = async () => {
     try {
+      setIsLoading(true);
       await logout();
       setLogoutModalVisible(false);
       router.replace('/Login');
     } catch (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Error', error.message || 'Logout failed');
       setLogoutModalVisible(false);
+    } finally {
+      setIsLoading(false);
     }
-  };  
-  return (
-    <>
-      <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 bg-[#F6F6F6]">
-        {/* Header Background */}
-        <View className="bg-red-500 pt-10 pb-2 px-0 rounded-b-[18px]">
-          <Text className="text-white text-lg font-bold pl-5 pb-12">Profile</Text>
-        </View>
+  };
 
-        {/* Profile Card */}
-        <View className="absolute top-20 self-center w-[92%] bg-white rounded-2xl shadow-lg px-5 pt-6 pb-4 z-10">
+  // Render loading state
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text className="mt-4 text-gray-600">Loading profile...</Text>
+      </View>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <View className="flex-1 bg-white justify-center items-center px-5">
+        <Stack.Screen options={{ headerShown: false }} />
+        <Text className="text-red-500 text-center text-base mb-4">{error}</Text>
+        <TouchableOpacity 
+          className="bg-blue-500 px-6 py-3 rounded-lg"
+          onPress={() => router.replace('/Login')}
+        >
+          <Text className="text-white font-bold">Return to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView className="flex-1 bg-gray-100">
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* Header Background */}
+      <View className="bg-red-500 pt-10 pb-16 px-0 rounded-b-3xl">
+        <Text className="text-white text-lg font-bold pl-5">Profile</Text>
+      </View>
+
+      {/* Profile Card */}
+      <View className="w-full px-4 -mt-12 mb-4">
+        <View className="bg-white rounded-2xl shadow-lg px-5 pt-6 pb-4">
           
-          {/* Top Row - Avatar + Info + Action */}
-          <View className="flex-row items-center mb-2">
+          {/* Top Row - Avatar + Info */}
+          <View className="flex-row items-center mb-4">
             <TouchableOpacity 
               onPress={() => setPhotoModalVisible(true)} 
-              className="w-16 h-16 rounded-full border-2 border-white flex justify-center items-center"
-              style={{position: 'relative'}}
+              className="w-16 h-16 rounded-full border-2 border-white flex justify-center items-center relative"
               activeOpacity={0.8}
             >
               <Image 
-                source={{ uri: 'https://randomuser.me/api/portraits/women/10.jpg' }} 
+                source={{ uri: user?.user?.avatar || 'https://randomuser.me/api/portraits/women/10.jpg' }} 
                 className="w-16 h-16 rounded-full"
               />
-              <View style={{
-                position: 'absolute', 
-                bottom: 0, 
-                right: 0, 
-                backgroundColor: '#222', 
-                borderRadius: 20, 
-                padding: 4,
-                borderWidth: 2,
-                borderColor: '#fff'
-              }}>
+              <View className="absolute bottom-0 right-0 bg-gray-800 rounded-full p-1 border-2 border-white">
                 <Image 
-                  source={require('../../assets/images/camera_icon.png')} // Place a suitable camera icon in your project
-                  style={{ width: 20, height: 20, tintColor: "white" }}
+                  source={require('../../assets/images/camera_icon.png')}
+                  style={{ width: 16, height: 16, tintColor: "white" }}
                 />
               </View>
             </TouchableOpacity>
             <View className="ml-3 flex-1">
-              <Text className="text-black text-lg font-bold">{user ? `${user.firstName} ${user.lastName}` : 'Loading...'}</Text>
-              <Text className="text-gray-700 text-xs mt-0.5">Level {user?.level || 1}</Text>
+              <Text className="text-black text-lg font-bold">
+                {user ? `${user?.user?.firstName} ${user.user.lastName}`.trim() : 'User'}
+              </Text>
+              <Text className="text-gray-600 text-xs mt-1">Level {user?.user?.level || 1}</Text>
             </View>
-            {/* <TouchableOpacity>
-              <Text className="text-2xl text-gray-400">{">"}</Text>
-            </TouchableOpacity> */}
           </View>
 
           {/* Stats Row */}
-          <View className="flex-row justify-between mt-1 mb-2">
-            <View className="items-center flex-1 border border-[#EEE] rounded-lg py-2 mx-1 bg-[#FAFAFA]">
-              <Text className="text-xs text-gray-500 mb-1">Contests</Text>
-              <Text className="text-lg font-bold text-gray-800">{user?.totalContests || 0}</Text>
+          <View className="flex-row justify-between gap-2 mb-3">
+            <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
+              <Text className="text-xs text-gray-600 mb-1 font-semibold">Contests</Text>
+              <Text className="text-base font-bold text-gray-900">{user?.user?.totalContests || 0}</Text>
             </View>
-            <View className="items-center flex-1 border border-[#EEE] rounded-lg py-2 mx-1 bg-[#FAFAFA]">
-              <Text className="text-xs text-gray-500 mb-1">Win</Text>
-              <Text className="text-lg font-bold text-gray-800">{user?.totalWins || 0}</Text>
+            <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
+              <Text className="text-xs text-gray-600 mb-1 font-semibold">Wins</Text>
+              <Text className="text-base font-bold text-gray-900">{user?.totalWins || 0}</Text>
             </View>
-            <View className="items-center flex-1 border border-[#EEE] rounded-lg py-2 mx-1 bg-[#FAFAFA]">
-              <Text className="text-xs text-gray-500 mb-1">Win Rate</Text>
-              <Text className="text-lg font-bold text-gray-800">
-                {user?.totalContests ? ((user.totalWins / user.totalContests) * 100).toFixed(1) : 0}%
+            <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
+              <Text className="text-xs text-gray-600 mb-1 font-semibold">Win Rate</Text>
+              <Text className="text-base font-bold text-gray-900">
+                {user?.user?.totalContests ? ((user.user.totalWins / user.user.totalContests) * 100).toFixed(1) : 0}%
               </Text>
+            </View>
+          </View>
+
+          {/* Earnings Display */}
+          <View className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 mb-2 bg-gray-50">
+            <View className="w-8 h-8 rounded-full items-center justify-center border border-gray-300 bg-white mr-3">
+              <Text className="font-bold text-green-600 text-sm">₹</Text>
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-gray-600 font-semibold">Total Earnings</Text>
+              <Text className="text-sm font-bold text-gray-900">₹{(user?.user?.totalEarnings || 0).toLocaleString()}</Text>
             </View>
           </View>
 
           {/* Refer and Earn */}
           <TouchableOpacity 
             onPress={() => router.push("/profile/refer")} 
-            className="flex-row items-center border border-[#EEE] rounded-lg px-3 py-2 mt-2 bg-[#FAFAFA]"
+            className="flex-row items-center border border-gray-200 rounded-lg px-3 py-3 bg-blue-50 active:bg-blue-100"
+            activeOpacity={0.7}
           >
-            <View className="w-7 h-7 rounded-full items-center justify-center border border-[#E5E5E5] bg-white mr-3 flex-row" >
-              <Text style={{fontWeight: 'bold', color: '#777'}}>₹</Text>
+            <View className="w-8 h-8 rounded-full items-center justify-center border border-blue-300 bg-blue-100 mr-3">
+              <Text className="font-bold text-blue-600 text-sm">₹</Text>
             </View>
             <View className="flex-1">
-              <Text className="text-sm font-bold text-gray-800 mb-0.5">Refer and earn</Text>
-              <Text className="text-xs text-gray-500">Invite your friends and get ₹500</Text>
+              <Text className="text-xs text-gray-700 font-semibold">Refer and Earn</Text>
+              <Text className="text-xs text-gray-600">Invite friends and get ₹500</Text>
             </View>
-            <View className="w-7 h-7 bg-blue-500 rounded-full items-center justify-center ml-2">
-              <Text className="text-white font-bold">P</Text>
-            </View>
+            <Text className="text-gray-400 text-lg">›</Text>
           </TouchableOpacity>
         </View>
-        
-      <Modal
-  transparent={true}
-  visible={photoModalVisible}
-  animationType="fade"
-  onRequestClose={() => setPhotoModalVisible(false)}
->
-  <View className="flex-1 justify-end items-center bg-black bg-opacity-20">
-    <View className="w-full min-h-[36%] bg-[#F8F8F8] rounded-t-2xl px-5 pt-7 pb-7 items-center shadow relative">
-      {/* Close icon */}
-      <TouchableOpacity
-        onPress={() => setPhotoModalVisible(false)}
-        style={{position: "absolute", top: 14, right: 14, zIndex: 10}}
-        hitSlop={{ top:12, left:12, right:12, bottom:12 }}
-      >
-        <Text style={{fontSize: 22, color: "#999"}}>×</Text>
-      </TouchableOpacity>
-      <Text className="font-bold text-lg mb-2 text-center">Profile Photo</Text>
-      {/* Note section */}
-      <View className="w-full mb-5">
-        <Text className="font-bold text-xs text-gray-800 mb-1">Note</Text>
-        <Text className="text-xs text-gray-600">
-          Use a clear and appropriate profile photo. Inappropriate images may lead to account suspension. Your profile picture will be visible to other users.
-        </Text>
       </View>
-      {/* Upload buttons */}
-      <TouchableOpacity className="w-full flex-row items-center py-3 px-3 mb-3 rounded border border-gray-300 bg-white"
-        onPress={() => {/* gallery upload handler */}}
-      >
-        <Text style={{ fontSize: 18, marginRight: 8 }}>🖼️</Text>
-        <Text className="text-base text-gray-700 font-bold">Upload From Gallery</Text>
-      </TouchableOpacity>
-      <TouchableOpacity className="w-full flex-row items-center py-3 px-3 rounded border border-gray-300 bg-white"
-        onPress={() => {/* document upload handler */}}
-      >
-        <Text style={{ fontSize: 18, marginRight: 8 }}>📄</Text>
-        <Text className="text-base text-gray-700 font-bold">From Document</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
 
-        {/* Option List */}
-       <View className="mt-60 px-5">
-          {options.map((opt, idx) => (
+      {/* Photo Modal */}
+      <Modal
+        transparent={true}
+        visible={photoModalVisible}
+        animationType="fade"
+        onRequestClose={() => setPhotoModalVisible(false)}
+      >
+        <View className="flex-1 justify-end items-center bg-black bg-opacity-30">
+          <View className="w-full bg-white rounded-t-3xl px-5 pt-6 pb-8 items-center">
             <TouchableOpacity
-              key={idx}
-              className="flex-row items-center justify-between bg-white rounded-xl px-5 py-5 mb-3 shadow"
-              onPress={() => handleOptionPress(opt.route, opt.label)}
-            >
-              <View className="flex-row items-center">
-                <Text className="text-xl mr-3">{opt.icon}</Text>
-                <Text className="text-base text-gray-800">{opt.label}</Text>
-              </View>
-              <Text className="text-gray-400 text-xl">{'>'}</Text>
+              onPress={() => setPhotoModalVisible(false)}
+              className="absolute top-4 right-4 w-8 h-8 items-center justify-center"
+              hitSlop={{ top: 12, left: 12, right: 12, bottom: 12 }}
+            > 
+              <Text className="text-2xl text-gray-400">×</Text>
             </TouchableOpacity>
-          ))}
+            
+            <Text className="font-bold text-lg mb-4 text-center text-gray-900">Update Profile Photo</Text>
+            
+            <View className="w-full mb-6">
+              <Text className="font-semibold text-xs text-gray-900 mb-2">Guidelines</Text>
+              <Text className="text-xs text-gray-600 leading-5">
+                Use a clear, professional photo. Inappropriate images may lead to account suspension. Your profile picture will be visible to other users in contests.
+              </Text>
+            </View>
+            
+            <TouchableOpacity 
+              className="w-full flex-row items-center py-3 px-4 mb-2 rounded-lg border border-gray-300 bg-gray-50 active:bg-gray-100"
+              onPress={() => {/* gallery upload handler */}}
+              activeOpacity={0.7}
+            >
+              <Text className="text-xl mr-3">🖼️</Text>
+              <Text className="text-sm text-gray-800 font-semibold">Upload From Gallery</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              className="w-full flex-row items-center py-3 px-4 rounded-lg border border-gray-300 bg-gray-50 active:bg-gray-100"
+              onPress={() => {/* camera upload handler */}}
+              activeOpacity={0.7}
+            >
+              <Text className="text-xl mr-3">📸</Text>
+              <Text className="text-sm text-gray-800 font-semibold">Take a Photo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
+      </Modal>
+
+      {/* Option List */}
+      <View className="px-4 pb-20">
+        <Text className="text-xs font-semibold text-gray-600 mb-3 pl-1">SETTINGS</Text>
+        {options.map((opt, idx) => (
+          <TouchableOpacity
+            key={idx}
+            className="flex-row items-center justify-between bg-white rounded-lg px-4 py-4 mb-2 border border-gray-200 active:bg-gray-50"
+            onPress={() => handleOptionPress(opt.route, opt.label)}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center flex-1">
+              <Text className="text-xl mr-3">{opt.icon}</Text>
+              <Text className="text-sm text-gray-800 font-medium">{opt.label}</Text>
+            </View>
+            <Text className="text-gray-400 text-lg">›</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
+      {/* Logout Modal */}
       <Modal
-  transparent={true}
-  visible={logoutModalVisible}
-  animationType="fade"
-  onRequestClose={() => setLogoutModalVisible(false)}
->
-  <View className="flex-1 justify-end items-center bg-black bg-opacity-20">
-    <View className="w-full p-6 bg-white rounded-t-2xl shadow-xl items-center">
-      <Text className="font-bold text-lg text-center mb-3">Logout?</Text>
-      <Text className="text-sm text-gray-700 text-center mb-1">Are you sure you want to log out?</Text>
-      <Text className="text-xs text-gray-400 text-center mb-5">You won't receive updates related to your contest.</Text>
-      <TouchableOpacity
-        className="bg-green-600 w-full rounded mb-3 py-3 items-center"
-        onPress={handleLogout}
+        transparent={true}
+        visible={logoutModalVisible}
+        animationType="fade"
+        onRequestClose={() => setLogoutModalVisible(false)}
       >
-        <Text className="text-white text-base font-bold">Yes Logout</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        className="border border-gray-300 bg-gray-50 w-full rounded py-3 items-center"
-        onPress={() => setLogoutModalVisible(false)}
-      >
-        <Text className="text-base text-gray-600 font-bold">Cancel</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-</Modal>
-
-    </>
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-40">
+          <View className="w-5/6 bg-white rounded-2xl px-6 py-8 items-center shadow-lg">
+            <View className="w-12 h-12 rounded-full bg-red-100 items-center justify-center mb-4">
+              <Text className="text-2xl">⚠️</Text>
+            </View>
+            
+            <Text className="font-bold text-lg text-center mb-2 text-gray-900">Logout?</Text>
+            <Text className="text-sm text-gray-700 text-center mb-1">Are you sure you want to log out?</Text>
+            <Text className="text-xs text-gray-500 text-center mb-6">You won't receive updates related to your contests.</Text>
+            
+            <TouchableOpacity
+              className="bg-red-500 w-full rounded-lg mb-3 py-3 items-center active:bg-red-600"
+              onPress={handleLogout}
+              disabled={isLoading}
+              activeOpacity={0.7}
+            >
+              <Text className="text-white text-sm font-bold">{isLoading ? 'Logging out...' : 'Yes, Logout'}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              className="border border-gray-300 bg-gray-50 w-full rounded-lg py-3 items-center active:bg-gray-100"
+              onPress={() => setLogoutModalVisible(false)}
+              disabled={isLoading}
+              activeOpacity={0.7}
+            >
+              <Text className="text-sm text-gray-700 font-semibold">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </ScrollView>
   );
 }
