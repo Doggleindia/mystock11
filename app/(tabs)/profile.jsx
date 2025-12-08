@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 
 const options = [
@@ -157,11 +158,12 @@ export default function ProfileHomeScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-gray-100">
-      <Stack.Screen options={{ headerShown: false }} />
-      
-      {/* Header Background */}
-      <View className="bg-red-500 pt-10 pb-16 px-0 rounded-b-3xl">
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <ScrollView className="flex-1 bg-gray-100">
+        <Stack.Screen options={{ headerShown: false }} />
+        
+        {/* Header Background */}
+        <View className="bg-red-500 pt-10 pb-16 px-0 rounded-b-3xl">
         <Text className="text-white text-lg font-bold pl-5">Profile</Text>
       </View>
 
@@ -351,6 +353,7 @@ export default function ProfileHomeScreen() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

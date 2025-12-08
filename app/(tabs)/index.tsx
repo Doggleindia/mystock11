@@ -9,11 +9,9 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  SafeAreaView,
-  Text,
-  TouchableOpacity,
-  View,
+  View
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 
 type FilterRange = {
@@ -162,9 +160,8 @@ async function fetchContestsForMatch(matchId:any) {
   };
 
   const filteredData = filterContests(niftyData);
-console.log("first")
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }} edges={['top', 'left', 'right']}>
       <FlatList
         data={filteredData}
         keyExtractor={(it, index) => it.id || `contest-${index}`}

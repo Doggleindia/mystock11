@@ -5,12 +5,13 @@ import { API_BASE_URL } from "@/services/config";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native";
 
 export default function ContestDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
-    const [contest, setContest] = useState<any | null>(null);
+  const [contest, setContest] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,9 @@ export default function ContestDetails() {
       setLoading(true);
       setError(null);
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/match-contests/admin/${id}`);
+        const res = await axios.get(
+          `${API_BASE_URL}/api/match-contests/admin/${id}`
+        );
         // API returns { success, data: { ...contest } }
         setContest(res.data?.data ?? null);
       } catch (e: any) {
@@ -39,22 +42,24 @@ export default function ContestDetails() {
   // console.log(contest,"contestData")
   return (
     <>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
       <Stack.Screen
-      options={{
-        headerShown: false, // 👈 hides the auto header
-      }}
-    />
-    
-    <View style={{ flex: 1 }}  >
-      <AppHeader
-        title="Contest Details"
-        balance={contest?.entryFee || ''}
-        onBack={() => router.back()}
+        options={{
+          headerShown: false, // 👈 hides the auto header
+        }}
       />
-      <ScrollView style={{ flex: 1 }}>
-        <ContestData  contestData = {contest}/>
-      </ScrollView>
-    </View>
+
+      <View style={{ flex: 1 }}>
+        <AppHeader
+          title="Contest Details"
+          balance={contest?.entryFee || ""}
+          onBack={() => router.back()}
+        />
+        <ScrollView style={{ flex: 1 }}>
+          <ContestData contestData={contest} />
+        </ScrollView>
+      </View>
+      </SafeAreaView>
     </>
   );
 }

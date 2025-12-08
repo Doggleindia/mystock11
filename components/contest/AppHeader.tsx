@@ -1,7 +1,7 @@
 // components/AppHeader.tsx
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function AppHeader({
   title,
@@ -14,7 +14,7 @@ export default function AppHeader({
 }) {
   return (
     <View  style={{
-        marginTop:20,
+        // marginTop:20,
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 15,

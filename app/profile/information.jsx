@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { useAuthStore } from '../../store/authStore';
 
@@ -60,10 +61,11 @@ export default function ProfileInformationScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <Stack.Screen options={{ headerShown: false }} />
-      <BalanceHeader title="My Information" />
-      <View className="flex-1 bg-white px-5 pt-7 pb-8">
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+      <ScrollView className="flex-1 bg-white">
+        <Stack.Screen options={{ headerShown: false }} />
+        <BalanceHeader title="My Information" />
+        <View className="flex-1 bg-white px-5 pt-7 pb-8">
         
         <Text className="text-xs text-gray-600 mb-1 font-semibold">First Name</Text>
         <TextInput 
@@ -159,7 +161,8 @@ export default function ProfileInformationScreen() {
             <Text className="text-base text-white font-bold">Update Details</Text>
           )}
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

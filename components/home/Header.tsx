@@ -1,12 +1,12 @@
-import React from "react";
-import { View, Text, Image, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Image, Pressable, Text, View } from "react-native";
 
 export default function Header() {
   return (
     <View
       style={{
-        marginTop:20,
+        // marginTop:20,
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 15,

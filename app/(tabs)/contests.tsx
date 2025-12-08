@@ -17,6 +17,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const formatCurrency = (value?: number | null) => {
   if (typeof value !== "number" || Number.isNaN(value)) return "—";
@@ -282,7 +283,7 @@ const CompletedContestScreen = () => {
   };
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 bg-gray-50">
         <Header title="Beginner’s Arena" />
@@ -318,7 +319,7 @@ const CompletedContestScreen = () => {
           {renderContent()}
         </ScrollView>
       </View>
-    </>
+    </SafeAreaView>
   );
 };
 
