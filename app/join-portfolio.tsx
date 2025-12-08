@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 import MarketOverview from "@/components/portfolio/MarketOverview";
@@ -232,7 +233,7 @@ export default function JoinPortfolio() {
   }, [activePortfolio]);
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
       <View className="flex-1 bg-white">
         {!hasContest ? (
@@ -356,6 +357,6 @@ export default function JoinPortfolio() {
           </>
         )}
       </View>
-    </>
+    </SafeAreaView>
   );
 }

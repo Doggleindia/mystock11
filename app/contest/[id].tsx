@@ -5,7 +5,7 @@ import { API_BASE_URL } from "@/services/config";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ContestDetails() {
   const { id } = useLocalSearchParams<{ id: string }>();

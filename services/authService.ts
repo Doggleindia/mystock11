@@ -4,7 +4,7 @@ const BASE_URL = `${API_BASE_URL}/api`;
 
 export const authService = {
   // Get user profile
-  async getProfile(token) {
+  async getProfile(token: string) {
     try {
       const response = await fetch(`${BASE_URL}/auth/getprofile`, {
         method: 'GET',
@@ -22,7 +22,7 @@ export const authService = {
   },
 
   // Logout user
-  async logout(token) {
+  async logout(token: string) {
     try {
       const response = await fetch(`${BASE_URL}/auth/logout`, {
         method: 'GET',
@@ -40,7 +40,7 @@ export const authService = {
   },
 
   // Register new user
-  async register(userData) {
+  async register(userData: any) {
     try {
       const response = await fetch(`${BASE_URL}/auth/register`, {
         method: 'POST',
@@ -58,7 +58,7 @@ export const authService = {
   },
 
   // Login user
-  async login(credentials) {
+  async login(credentials: any) {
     try {
       const response = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
@@ -76,7 +76,7 @@ export const authService = {
   },
 
   // Google signup
-  async googleSignup(token) {
+  async googleSignup(token: string) {
     try {
       const response = await fetch(`${BASE_URL}/auth/google-signup`, {
         method: 'POST',
@@ -94,7 +94,7 @@ export const authService = {
   },
 
   // Google login
-  async googleLogin(token) {
+  async googleLogin(token: string) {
     try {
       const response = await fetch(`${BASE_URL}/auth/firebase/google-login`, {
         method: 'POST',
@@ -112,7 +112,7 @@ export const authService = {
   },
 
   // Change password
-  async changePassword(passwords) {
+  async changePassword(passwords: any) {
     try {
       const response = await fetch(`${BASE_URL}/auth/change-password`, {
         method: 'POST',
@@ -131,7 +131,7 @@ export const authService = {
   },
 
   // Reset password
-  async resetPassword(resetData) {
+  async resetPassword(resetData: any) {
     try {
       const response = await fetch(`${BASE_URL}/auth/reset-password`, {
         method: 'POST',
@@ -149,7 +149,7 @@ export const authService = {
   },
 
   // Update user profile
-  async updateProfile(token, profileData) {
+  async updateProfile(token: string, profileData: any) {
     try {
       const response = await fetch(`${BASE_URL}/user-profile/profile`, {
         method: 'PUT',
@@ -168,10 +168,9 @@ export const authService = {
   },
 
   // Upload avatar
-  async uploadAvatar(token, formData) {
+  async uploadAvatar(token: string, formData: FormData) {
     try {
       console.log('Uploading avatar with token:', token?.substring(0, 20) + '...');
-      console.log('FormData entries:', Array.from(formData.entries()));
       
       const response = await fetch(`${BASE_URL}/user-profile/update-avatar`, {
         method: 'PUT',

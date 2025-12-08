@@ -2,10 +2,12 @@ import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const OnboardingScreen = () => {
      const navigation = useNavigation();
-     return(<>
+     return(
+     <SafeAreaView style={styles.safeContainer}>
      <Stack.Screen options={{ headerShown: false }} />
   <View style={styles.container}>
     <TouchableOpacity style={styles.skip} 
@@ -31,10 +33,11 @@ const OnboardingScreen = () => {
       </TouchableOpacity>
     </View>
   </View>
-  </>)
+  </SafeAreaView>)
 };
 
 const styles = StyleSheet.create({
+  safeContainer: { flex: 1 },
   container: { flex:1, alignItems:'center', justifyContent:'center', backgroundColor:'#fff' },
   skip: { position: 'absolute', top: 40, right: 20, zIndex: 10 },
   skipText: { color: '#999', fontSize: 16 },

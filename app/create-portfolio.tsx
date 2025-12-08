@@ -11,6 +11,7 @@ import usePortfolioStore from '@/store/portfolioStore';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { Alert, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const stocks: Stock[] = [
   { symbol: 'HDFCBANK', companyName: 'HDFC Bank Ltd.', sector: 'Banking', price: '2,010.25', change: '-15.35 (-0.75%)', isPositive: false, credits: 9.0, setBy: '75%' },
@@ -105,7 +106,7 @@ export default function CreatePortfolio() {
   };
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
       <Stack.Screen
         options={{
           headerShown: false,
@@ -158,6 +159,6 @@ export default function CreatePortfolio() {
           onPress={handleProceed}
         />
       </View>
-    </>
+    </SafeAreaView>
   );
 }

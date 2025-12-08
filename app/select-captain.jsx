@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import {
   FlatList,
   Modal,
-  SafeAreaView,
   View,
   Text,
   TouchableOpacity,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, router } from "expo-router";
 import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
 import CaptainInfoBar from "../components/select-captainvc/CaptainInfoBar";
@@ -81,7 +81,7 @@ export default function SelectCaptainVC() {
   }
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <View className="flex-1 bg-white">
@@ -156,6 +156,6 @@ export default function SelectCaptainVC() {
         </SafeAreaView>
       </Modal>
 
-    </>
+    </SafeAreaView>
   );
 }

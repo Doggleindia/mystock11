@@ -134,12 +134,12 @@ const uploadAvatarHelper = async (uri: string, filename: string, type: string) =
     const blob = await response.blob();
     formData.append('avatar', blob, filename);
   } else {
-    // Native platform - append uri object
+    // Native platform - append uri object as any to bypass strict typing
     formData.append('avatar', {
       uri: uri,
       type: type,
       name: filename,
-    });
+    } as any);
   }
   return formData;
 };
