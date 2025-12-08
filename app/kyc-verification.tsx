@@ -1,7 +1,6 @@
-import { View, Text } from 'react-native'
+import KYCVerificationScreen from '@/components/wallet/KYCVerificationScreen'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import KYCVerificationScreen from '@/components/wallet/KYCVerificationScreen'
 
 const KycVerification = () => {
   return (

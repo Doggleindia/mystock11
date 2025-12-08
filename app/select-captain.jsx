@@ -1,20 +1,20 @@
+import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
+import usePortfolioStore from "@/store/portfolioStore";
+import { Stack, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
+  Alert,
   FlatList,
   Modal,
-  View,
   Text,
   TouchableOpacity,
-  Alert,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, router } from "expo-router";
-import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
 import CaptainInfoBar from "../components/select-captainvc/CaptainInfoBar";
+import ConfirmationButton from "../components/select-captainvc/ConfirmationButton";
 import StockHeader from "../components/select-captainvc/StockHeader";
 import StockRow from "../components/select-captainvc/StockRow";
-import ConfirmationButton from "../components/select-captainvc/ConfirmationButton";
-import usePortfolioStore from "@/store/portfolioStore";
 
 export default function SelectCaptainVC() {
   const draftPortfolio = usePortfolioStore((state) => state.draftPortfolio);

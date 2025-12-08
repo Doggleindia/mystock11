@@ -1,7 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const OnboardingScreen = () => {

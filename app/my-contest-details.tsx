@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import Leaderboard from "@/components/contest/Leaderboard"; 
+import Leaderboard from "@/components/contest/Leaderboard";
 import WinningsTable from "@/components/contest/WinningsTable";
-import Header from "@/components/wallet/BallanceHeader";
-import MyPortfolio from "@/components/my-contest/MyPortfolio";
 import LiveMarket from "@/components/my-contest/LiveMarket";
+import MyPortfolio from "@/components/my-contest/MyPortfolio";
+import Header from "@/components/wallet/BallanceHeader";
 import { Stack } from "expo-router";
+import React, { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TAB_ITEMS = ["Winnings", "Leaderboard", "My Portfolio", "Live Market"];
 

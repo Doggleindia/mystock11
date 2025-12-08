@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, TouchableOpacity, View } from "react-native";
 import Modal from "react-native-modal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type Props = {
   visible: boolean;

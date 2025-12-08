@@ -1,7 +1,7 @@
 import AppHeader from "@/components/contest/AppHeader";
 import ContestData from "@/components/contest/ContestDetails";
-import axios from "axios";
 import { API_BASE_URL } from "@/services/config";
+import axios from "axios";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
