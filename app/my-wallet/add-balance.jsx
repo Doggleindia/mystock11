@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { Stack } from 'expo-router';
+import { useState } from 'react';
+import { View } from 'react-native';
 import Header from '../../components/wallet/BallanceHeader';
 import Footer from '../../components/wallet/Footer';
 import MainContent from '../../components/wallet/MainContent';
-import { View } from 'react-native';
 
 const AddBalance = () => {
   const [selectedAmount, setSelectedAmount] = useState(100);

@@ -1,7 +1,7 @@
-import { View, Text, TouchableOpacity } from 'react-native';
-import { Svg, Path } from 'react-native-svg';
-import React, { useEffect, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Path, Svg } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { useAuthStore } from '../../store/authStore';
 

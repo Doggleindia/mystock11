@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from "react-native";
-import DetailsCard from "./DetailsCard";
+import React, { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "../../store/authStore";
+import DetailsCard from "./DetailsCard";
 
 interface MainContentProps {
   onAmountChange?: (amount: number) => void;
