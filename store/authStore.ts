@@ -22,6 +22,18 @@ interface UserProfile {
   language?: string;
   theme?: string;
   totalEarnings?: number;
+  ssnLast4?: string;
+  isVerified?: boolean;
+  kycStatus?: string;
+  bankDetails?: {
+    bankName: string;
+    routingNumber: string;
+    accountNumberLast4: string;
+  };
+  identityDocuments?: {
+    idFrontUrl: string;
+    idBackUrl: string;
+  };
   [key: string]: any;
 }
 
@@ -37,6 +49,7 @@ interface AuthState {
   fetchProfile: () => Promise<void>;
   updateProfile: (profileData: Partial<UserProfile>) => Promise<void>;
   uploadAvatar: (formData: FormData) => Promise<void>;
+  depositAmount: (amount: number) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -120,6 +133,26 @@ export const useAuthStore = create<AuthState>((set) => ({
       return response;
     } catch (error) {
       console.error('Error uploading avatar:', error);
+      throw error;
+    }
+  },
+
+  depositAmount: async (amount: number) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) throw new Error('No token found');
+      
+      // Call deposit API
+      const response = await authService.depositAmount(token, amount);
+      console.log('Deposit successful:', response);
+      
+      // Fetch updated profile to get new balance
+      const profile = await authService.getProfile(token);
+      set({ user: profile });
+      
+      return response;
+    } catch (error) {
+      console.error('Error depositing amount:', error);
       throw error;
     }
   },

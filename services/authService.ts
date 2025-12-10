@@ -200,4 +200,37 @@ export const authService = {
       throw error;
     }
   },
+
+  // Deposit amount to wallet
+  async depositAmount(token: string, amount: number) {
+    try {
+      console.log('Depositing amount:', amount);
+      const response = await fetch(`${BASE_URL}/transactions/user/deposit`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount }),
+      });
+      
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType?.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = { message: text };
+      }
+      
+      console.log('Deposit response:', { status: response.status, ok: response.ok, data });
+      
+      if (!response.ok) throw new Error(data.message || `Deposit failed with status ${response.status}`);
+      return data;
+    } catch (error) {
+      console.error('Deposit error:', error);
+      throw error;
+    }
+  },
 };

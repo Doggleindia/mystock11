@@ -193,7 +193,7 @@ export default function ProfileHomeScreen() {
               <Text className="text-black text-lg font-bold">
                 {user ? `${user?.user?.firstName} ${user?.user?.lastName}`.trim() : 'User'}
               </Text>
-              <Text className="text-gray-600 text-xs mt-1">Level {user?.user?.level || 1}</Text>
+              <Text className="text-gray-600 text-xs mt-1">Level {user?.stats?.level || 1}</Text>
             </View>
           </View>
 
@@ -201,16 +201,16 @@ export default function ProfileHomeScreen() {
           <View className="flex-row justify-between gap-2 mb-3">
             <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
               <Text className="text-xs text-gray-600 mb-1 font-semibold">Contests</Text>
-              <Text className="text-base font-bold text-gray-900">{user?.user?.totalContests || 0}</Text>
+              <Text className="text-base font-bold text-gray-900">{user?.stats?.totalContests || 0}</Text>
             </View>
             <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
               <Text className="text-xs text-gray-600 mb-1 font-semibold">Wins</Text>
-              <Text className="text-base font-bold text-gray-900">{user?.user?.totalWins || 0}</Text>
+              <Text className="text-base font-bold text-gray-900">{user?.stats?.totalWins || 0}</Text>
             </View>
             <View className="items-center flex-1 border border-gray-200 rounded-lg py-3 bg-gray-50">
               <Text className="text-xs text-gray-600 mb-1 font-semibold">Win Rate</Text>
               <Text className="text-base font-bold text-gray-900">
-                {user?.user?.totalContests ? ((user?.user?.totalWins / user?.user?.totalContests) * 100).toFixed(1) : 0}%
+                {user?.stats?.totalContests ? ((user?.stats?.totalWins / user?.stats?.totalContests) * 100).toFixed(1) : 0}%
               </Text>
             </View>
           </View>
@@ -222,7 +222,7 @@ export default function ProfileHomeScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-xs text-gray-600 font-semibold">Total Earnings</Text>
-              <Text className="text-sm font-bold text-gray-900">₹{(user?.user?.totalEarnings || 0).toLocaleString()}</Text>
+              <Text className="text-sm font-bold text-gray-900">₹{(user?.stats?.totalEarnings || 0).toLocaleString()}</Text>
             </View>
           </View>
 

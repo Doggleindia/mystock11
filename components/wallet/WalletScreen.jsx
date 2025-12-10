@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   SafeAreaView,
@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Circle, Line, Path, Rect, Svg } from "react-native-svg";
+import { useAuthStore } from "../../store/authStore";
 
 // --- SVG Icons for React Native ---
 // Using react-native-svg. Tailwind classes don't apply here, so props are passed directly.
@@ -213,8 +214,27 @@ const BalanceInfoRow = ({
 // --- Main App Component ---
 
 export default function App() {
-  const unutilisedTooltip = "Unused Deposits: ₹0\nDiscount Balance: ₹0";
-  const winningsTooltip = "Play Winnings: ₹0\nWithdrawal Winnings: ₹12.24";
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        await useAuthStore.getState().fetchProfile();
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
+
+  // Extract balance data from user
+  const walletBalance = user?.user?.walletBalance || 0;
+  const winningsBalance = user?.user?.winningsBalance || 0;
+  const totalBalance = walletBalance + winningsBalance;
+
+  const unutilisedTooltip = `Unused Deposits: ₹${walletBalance}\nDiscount Balance: ₹0`;
+  const winningsTooltip = `Play Winnings: ₹0\nWithdrawal Winnings: ₹${winningsBalance}`;
   const bonusTooltip = "Discount to join public contest";
 
   const addbalance = () => {
@@ -247,7 +267,7 @@ export default function App() {
                     Current Balance
                   </Text>
                   <Text className="text-2xl font-bold text-gray-900">
-                    ₹12.24
+                    ₹{totalBalance.toFixed(2)}
                   </Text>
                 </View>
               </View>
@@ -264,12 +284,12 @@ export default function App() {
             <View className="pt-1">
               <BalanceInfoRow
                 label="Amount Unutilised"
-                amount="0"
+                amount={walletBalance.toFixed(2)}
                 tooltipContent={unutilisedTooltip}
               />
               <BalanceInfoRow
                 label="Winnings"
-                amount="12.24"
+                amount={winningsBalance.toFixed(2)}
                 tooltipContent={winningsTooltip}
                 actionComponent={
                   <TouchableOpacity className="border border-gray-400 py-1 px-3 rounded">

@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 
-const DEFAULT_API_BASE_URL = "https://apis.doggleindia.com";
+const DEFAULT_API_BASE_URL = "http://localhost:5500";
 
 type Extra = {
   API_BASE_URL?: string;

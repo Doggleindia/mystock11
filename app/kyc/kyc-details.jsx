@@ -1,8 +1,9 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Svg, Path } from 'react-native-svg';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, useRouter } from 'expo-router';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
+import { useAuthStore } from '../../store/authStore';
 
 const VerifiedBadge = () => (
   <View className="bg-green-50 px-2 py-1 rounded-lg ml-1">
@@ -17,15 +18,55 @@ const EditIcon = () => (
 );
 
 // Show both detail and edit routes for PAN and Bank
-const screens = [
-  { label: "Mobile Number", value: "999 888 222", verified: true, editRoute: "/kyc/verify-mobile", type: "edit" },
-  { label: "Email Address", value: "name@gmail.com", verified: true, editRoute: "/kyc/verify-email", type: "edit" },
-  { label: "PAN Card", value: "EWADFA510B", verified: true, editRoute: "/kyc/verify-pan", viewRoute: "/kyc/pan-details", type: "both" },
-  { label: "Bank Account", value: "****1234", verified: true, editRoute: "/kyc/verify-bank", viewRoute: "/kyc/bank-details", type: "both" }
+const getScreens = (user) => [
+  { 
+    label: "Mobile Number", 
+    value: user?.user?.mobileNumber || "Not provided", 
+    verified: !!user?.user?.mobileNumber, 
+    editRoute: "/kyc/verify-mobile", 
+    type: "edit" 
+  },
+  { 
+    label: "Email Address", 
+    value: user?.user?.email || "Not provided", 
+    verified: !!user?.user?.email, 
+    editRoute: "/kyc/verify-email", 
+    type: "edit" 
+  },
+  { 
+    label: "PAN Card", 
+    value: user?.user?.ssnLast4 ? `****${user.user.ssnLast4}` : "Not provided", 
+    verified: user?.user?.isVerified || false, 
+    editRoute: "/kyc/verify-pan", 
+    viewRoute: "/kyc/pan-details", 
+    type: "both" 
+  },
+  { 
+    label: "Bank Account", 
+    value: user?.user?.bankDetails?.accountNumberLast4 ? `****${user.user.bankDetails.accountNumberLast4}` : "Not provided", 
+    verified: !!user?.user?.bankDetails?.accountNumberLast4, 
+    editRoute: "/kyc/verify-bank", 
+    viewRoute: "/kyc/bank-details", 
+    type: "both" 
+  }
 ];
 
 export default function KYCDetailsScreen() {
   const router = useRouter();
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(true);
+  const screens = getScreens(user);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        await useAuthStore.getState().fetchProfile();
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
 
   return (
     <>

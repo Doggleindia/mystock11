@@ -1,7 +1,29 @@
 import React from "react";
-import { Image, Text, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
+import { useAuthStore } from "../../store/authStore";
 
-export default function Footer() {
+interface FooterProps {
+  amount: number;
+  onDeposit?: () => void;
+  loading?: boolean;
+}
+
+export default function Footer({ amount = 100, onDeposit, loading = false }: FooterProps) {
+  const { depositAmount } = useAuthStore();
+
+  const handleDeposit = async () => {
+    if (onDeposit) {
+      onDeposit();
+    } else {
+      // Default deposit handler if onDeposit not provided
+      try {
+        await depositAmount(amount);
+      } catch (error) {
+        console.error('Deposit error:', error);
+      }
+    }
+  };
+
   return (
     <View className="px-4 pb-6">
       {/* Payment option */}
@@ -15,10 +37,18 @@ export default function Footer() {
       </View>
 
       {/* Add button */}
-      <TouchableOpacity className="bg-green-600 rounded-lg mt-3 py-3">
-        <Text className="text-center text-white font-semibold">
-          Add ₹100
-        </Text>
+      <TouchableOpacity 
+        onPress={handleDeposit}
+        disabled={loading}
+        className={`${loading ? 'bg-gray-400' : 'bg-green-600'} rounded-lg mt-3 py-3`}
+      >
+        {loading ? (
+          <ActivityIndicator color="white" />
+        ) : (
+          <Text className="text-center text-white font-semibold">
+            Add ₹{amount}
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );

@@ -25,15 +25,15 @@ export default function ProfileInformationScreen() {
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user?.firstName || '',
-        lastName: user?.lastName || '',
-        username: user?.username || '',
-        email: user?.email || '',
-        bio: user?.bio || '',
-        gender: user?.gender || '',
-        dob: user?.dob || '',
-        language: user?.language || 'en',
-        theme: user?.theme || 'light',
+        firstName: user?.user?.firstName || '',
+        lastName: user?.user?.lastName || '',
+        username: user?.user?.username || '',
+        email: user?.user?.email || '',
+        bio: user?.user?.bio || '',
+        gender: user?.user?.gender || '',
+        dob: user?.user?.dob || '',
+        language: user?.user?.language || 'en',
+        theme: user?.user?.theme || 'light',
       });
     }
   }, [user]);
@@ -100,12 +100,12 @@ export default function ProfileInformationScreen() {
             placeholder="Enter email"
             editable={false}
           />
-          <TouchableOpacity
+          {/* <TouchableOpacity
             className="ml-2 px-3 py-2 rounded bg-blue-500"
             onPress={() => router.push('profile/verify-email')}
           >
             <Text className="text-xs text-white font-bold">Verify</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <Text className="text-xs text-gray-600 mb-1 font-semibold">Bio</Text>

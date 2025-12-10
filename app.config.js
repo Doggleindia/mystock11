@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "https://apis.doggleindia.com";
+const DEFAULT_API_BASE_URL = "http://localhost:5500";
 
 export default {
   expo: {
