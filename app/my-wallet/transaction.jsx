@@ -1,97 +1,115 @@
 import { Stack, useRouter } from "expo-router";
-import React, { useState } from "react";
-import { View, ScrollView, TouchableOpacity, Text } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import TransactionCard from "../../components/wallet/transaction/TransactionCard";
 import DateHeader from "../../components/wallet/transaction/DateHeader";
+import walletService from "../../services/walletService";
 
 export default function MyTransactionsScreen() {
   const [activeTab, setActiveTab] = useState("Contest");
   const [activeFilter, setActiveFilter] = useState("");
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 10,
+    txnType: '',
+    purpose: '',
+    status: '',
+    startDate: '',
+    endDate: '',
+  });
+
   const router = useRouter();
   const tabs = ["Contest", "Withdrawals", "Deposits", "TDS"];
-  const transactionData = [
-    {
-      date: "01 August 2025",
-      transactions: [
-        {
-          id: "1",
-          type: "Contest",
-          subtype: "Entry Paid",
-          amount: -39,
-          time: "02:25 PM",
-          contest: "Pro Arena",
-          url: "/my-wallet/transaction-detail",
-        },
-        {
-          id: "2",
-          type: "Contest",
-          subtype: "Winnings",
-          amount: 50,
-          time: "02:25 PM",
-          contest: "Pro Arena",
-          url: "/my-wallet/transaction-detail",
-        },
-        {
-          id: "7",
-          type: "Withdrawals",
-          amount: -100,
-          time: "01:00 PM",
-          contest: null,
-          url: "/my-wallet/withdraw-detail",
-        },
-        {
-          id: "8",
-          type: "Deposits",
-          amount: 500,
-          time: "03:00 PM",
-          contest: null,
-          url: "/my-wallet/deposit-detail",
-        },
-        { id: "9", type: "TDS", amount: -5, time: "04:00 PM", contest: null },
-      ],
-    },
-    {
-      date: "30 July 2025",
-      transactions: [
-        {
-          id: "3",
-          type: "Contest",
-          subtype: "Entry Paid",
-          amount: -39,
-          time: "02:25 PM",
-          contest: "Pro Arena",
-          url: "/my-wallet/transaction-detail",
-        },
-        {
-          id: "4",
-          type: "Contest",
-          subtype: "Winnings",
-          amount: 50,
-          time: "02:25 PM",
-          contest: "Pro Arena",
-          url: "/my-wallet/transaction-detail",
-        },
-        {
-          id: "5",
-          type: "Withdrawals",
-          amount: -200,
-          time: "01:30 PM",
-          contest: null,
-          url: "/my-wallet/withdraw-detail",
-        },
-        {
-          id: "6",
-          type: "Deposits",
-          amount: 1000,
-          time: "02:45 PM",
-          contest: null,
-          url: "/my-wallet/deposit-detail",
-        },
-        { id: "10", type: "TDS", amount: -10, time: "04:30 PM", contest: null },
-      ],
-    },
-  ];
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [filters]);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      // Build params based on filters and active tab
+      const params: any = {
+        page: filters.page,
+        limit: filters.limit,
+      };
+
+      if (activeTab === "Contest") {
+        params.purpose = "contest_join";
+        params.txnType = "debit";
+      } else if (activeTab === "Withdrawals") {
+        params.purpose = "withdrawal";
+        params.txnType = "debit";
+      } else if (activeTab === "Deposits") {
+        params.purpose = "deposit";
+        params.txnType = "credit";
+      } else if (activeTab === "TDS") {
+        params.purpose = "tds";
+        params.txnType = "debit";
+      }
+
+      if (filters.status) params.status = filters.status;
+      if (filters.startDate) params.startDate = filters.startDate;
+      if (filters.endDate) params.endDate = filters.endDate;
+
+      const response = await walletService.getTransactions(params);
+      const txData = response.data || [];
+
+      // Transform API response to match existing UI structure
+      const groupedByDate: { [key: string]: any[] } = {};
+      txData.forEach((tx: any) => {
+        const date = new Date(tx.createdAt).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric',
+        });
+        if (!groupedByDate[date]) {
+          groupedByDate[date] = [];
+        }
+        groupedByDate[date].push({
+          id: tx._id,
+          type: getTransactionType(tx.purpose, activeTab),
+          subtype: getTransactionSubtype(tx.purpose),
+          amount: tx.txnType === 'debit' ? -Math.abs(tx.amount) : tx.amount,
+          time: new Date(tx.createdAt).toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          transaction: tx,
+          createdAt: tx.createdAt,
+          beforeBalance: tx.beforeBalance,
+          afterBalance: tx.afterBalance,
+        });
+      });
+
+      setTransactions(Object.entries(groupedByDate).map(([date, txs]) => ({
+        date,
+        transactions: txs,
+      })));
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error);
+      setTransactions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTransactionType = (purpose: string, currentTab: string): string => {
+    if (purpose === 'contest_join') return 'Contest';
+    if (purpose === 'withdrawal') return 'Withdrawals';
+    if (purpose === 'deposit') return 'Deposits';
+    if (purpose === 'tds') return 'TDS';
+    return currentTab;
+  };
+
+  const getTransactionSubtype = (purpose: string): string => {
+    if (purpose === 'contest_join') return 'Entry Paid';
+    if (purpose === 'winnings') return 'Winnings';
+    return purpose || '';
+  };
 
   const filterChips = {
     Contest: ["Entry Paid", "Winnings"],
@@ -150,7 +168,13 @@ export default function MyTransactionsScreen() {
         )}
         {/* Transaction List */}
         <ScrollView>
-          {transactionData.map((section, idx) => {
+          {loading && <ActivityIndicator size="large" color="#ef4444" style={{ marginTop: 20 }} />}
+          {!loading && transactions.length === 0 && (
+            <View className="items-center justify-center py-8">
+              <Text className="text-gray-500">No transactions found</Text>
+            </View>
+          )}
+          {!loading && transactions.map((section, idx) => {
             // Filter by tab and chip
             const filteredTxs = section.transactions.filter((tx) => {
               if (tx.type !== activeTab) return false;
@@ -168,8 +192,8 @@ export default function MyTransactionsScreen() {
                     tx={tx}
                     onPress={() =>
                       router.push({
-                        pathname:tx.url,
-                        params: { transaction: tx },
+                        pathname: "/my-wallet/transaction-detail",
+                        params: { transactionId: tx.id },
                       })
                     }
                   />

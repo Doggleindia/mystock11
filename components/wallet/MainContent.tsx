@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { useAuthStore } from "../../store/authStore";
+import walletService from "../../services/walletService";
 import DetailsCard from "./DetailsCard";
 
 interface MainContentProps {
@@ -8,10 +8,27 @@ interface MainContentProps {
 }
 
 export default function MainContent({ onAmountChange }: MainContentProps) {
-  const { user } = useAuthStore();
   const [selectedAmount, setSelectedAmount] = useState(100);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const walletBalance = user?.walletBalance || 0;
+  useEffect(() => {
+    fetchBalance();
+  }, []);
+
+  const fetchBalance = async () => {
+    try {
+      setLoading(true);
+      const response = await walletService.getBalance();
+      const balance = response.walletBalance ?? response.wallet ?? 0;
+      setWalletBalance(balance);
+    } catch (error) {
+      console.error('Failed to fetch balance:', error);
+      setWalletBalance(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount);

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { ActivityIndicator, Image, Text, TouchableOpacity, View } from "react-native";
-import { useAuthStore } from "../../store/authStore";
+import Toast from "react-native-toast-message";
+import walletService from "../../services/walletService";
 
 interface FooterProps {
   amount: number;
@@ -8,19 +9,36 @@ interface FooterProps {
   loading?: boolean;
 }
 
-export default function Footer({ amount = 100, onDeposit, loading = false }: FooterProps) {
-  const { depositAmount } = useAuthStore();
+export default function Footer({ amount = 100, onDeposit, loading: externalLoading = false }: FooterProps) {
+  const [loading, setLoading] = useState(false);
 
   const handleDeposit = async () => {
     if (onDeposit) {
       onDeposit();
-    } else {
-      // Default deposit handler if onDeposit not provided
-      try {
-        await depositAmount(amount);
-      } catch (error) {
-        console.error('Deposit error:', error);
+      return;
+    }
+
+    // Default deposit handler using walletService
+    try {
+      setLoading(true);
+      const response = await walletService.deposit({ amount });
+      if (response.success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: response.message || 'Amount added to wallet',
+        });
       }
+    } catch (error: any) {
+      const message = error?.response?.data?.message || error?.message || 'Deposit failed';
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: message,
+      });
+      console.error('Deposit error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,10 +57,10 @@ export default function Footer({ amount = 100, onDeposit, loading = false }: Foo
       {/* Add button */}
       <TouchableOpacity 
         onPress={handleDeposit}
-        disabled={loading}
-        className={`${loading ? 'bg-gray-400' : 'bg-green-600'} rounded-lg mt-3 py-3`}
+        disabled={loading || externalLoading}
+        className={`${loading || externalLoading ? 'bg-gray-400' : 'bg-green-600'} rounded-lg mt-3 py-3`}
       >
-        {loading ? (
+        {loading || externalLoading ? (
           <ActivityIndicator color="white" />
         ) : (
           <Text className="text-center text-white font-semibold">

@@ -22,6 +22,7 @@ import {
   ContestPortfolioPayload,
   createPortfolioAndJoinContest,
 } from "@/services/portfolioService";
+import walletService from "@/services/walletService";
 import usePortfolioStore from "@/store/portfolioStore";
 
 const PortfolioSummary = ({
@@ -170,12 +171,55 @@ export default function JoinPortfolio() {
       );
 
       const summaryData = joinResponse?.data;
+      
+      // Debit wallet amount for contest join
+      let beforeBalance = 0;
+      let afterBalance = 0;
+      if (totalCredits > 0) {
+        try {
+          const debitResponse = await walletService.debit({
+            amount: totalCredits,
+            purpose: 'contest_join',
+            meta: {
+              contestId: contestId,
+              portfolioId: summaryData?.portfolio?._id,
+            },
+          });
+          
+          if (debitResponse.success && debitResponse.data) {
+            beforeBalance = debitResponse.data.transaction?.beforeBalance || 0;
+            afterBalance = debitResponse.data.transaction?.afterBalance || 0;
+            Toast.show({
+              type: 'success',
+              text1: 'Wallet debited',
+              text2: `₹${totalCredits} debited for contest entry`,
+            });
+          }
+        } catch (debitError: any) {
+          const message =
+            debitError?.response?.data?.message ||
+            debitError?.message ||
+            'Failed to debit wallet';
+          
+          // Check if insufficient balance
+          if (/insufficient/i.test(message)) {
+            Alert.alert('Insufficient Balance', 'Please add money to your wallet and try again.');
+          } else {
+            Alert.alert('Wallet Error', message);
+          }
+          setIsJoining(false);
+          return;
+        }
+      }
+
       if (summaryData) {
         setLastJoinedContest({
           contestId: contestId as string,
           portfolio: summaryData.portfolio ?? null,
           transactionId: summaryData.transaction ?? null,
           message: joinResponse?.message,
+          beforeBalance,
+          afterBalance,
         });
       }
 
