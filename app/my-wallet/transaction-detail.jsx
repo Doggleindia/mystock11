@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
 import { Circle, Path, Svg } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import HelpSupport from '../../components/wallet/transaction/HelpSupport';

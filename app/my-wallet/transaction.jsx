@@ -1,9 +1,9 @@
 import { Stack, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import BalanceHeader from "../../components/wallet/BallanceHeader";
-import TransactionCard from "../../components/wallet/transaction/TransactionCard";
 import DateHeader from "../../components/wallet/transaction/DateHeader";
+import TransactionCard from "../../components/wallet/transaction/TransactionCard";
 import walletService from "../../services/walletService";
 
 export default function MyTransactionsScreen() {
