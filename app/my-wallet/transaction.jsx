@@ -26,7 +26,7 @@ export default function MyTransactionsScreen() {
 
   useEffect(() => {
     fetchTransactions();
-  }, [filters]);
+  }, [activeTab]);
 
   const fetchTransactions = async () => {
     try {

@@ -38,16 +38,12 @@ export default function DetailsCard({ amount }: { amount: number }) {
   {open && (
     <View className="mt-3 space-y-2">
       <View className="flex-row justify-between">
-        <Text className="text-gray-500">28% GST on Deposit</Text>
-        <Text className="text-red-500">-₹22.00</Text>
+        <Text className="text-gray-500 text-sm">Amount to Add</Text>
+        <Text className="text-green-600 font-semibold">₹{amount}</Text>
       </View>
-      <View className="flex-row justify-between">
-        <Text className="text-gray-500">Onestock promo cash</Text>
-        <Text className="text-green-500">+₹22.00</Text>
-      </View>
-      <View className="flex-row justify-between pt-1">
-        <Text className="font-semibold text-gray-700">Grand total</Text>
-        <Text className="font-semibold text-green-600">+₹{amount}.00</Text>
+      <View className="flex-row justify-between pt-2 border-t border-gray-200 mt-2\">
+        <Text className="font-semibold text-gray-700">Total Amount</Text>
+        <Text className="font-semibold text-green-600">₹{amount}</Text>
       </View>
     </View>
   )}

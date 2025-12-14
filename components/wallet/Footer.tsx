@@ -6,10 +6,11 @@ import walletService from "../../services/walletService";
 interface FooterProps {
   amount: number;
   onDeposit?: () => void;
+  onSuccess?: () => void;
   loading?: boolean;
 }
 
-export default function Footer({ amount = 100, onDeposit, loading: externalLoading = false }: FooterProps) {
+export default function Footer({ amount = 100, onDeposit, onSuccess, loading: externalLoading = false }: FooterProps) {
   const [loading, setLoading] = useState(false);
 
   const handleDeposit = async () => {
@@ -28,6 +29,10 @@ export default function Footer({ amount = 100, onDeposit, loading: externalLoadi
           text1: 'Success',
           text2: response.message || 'Amount added to wallet',
         });
+        // Call onSuccess callback to refresh balance
+        if (onSuccess) {
+          setTimeout(onSuccess, 500);
+        }
       }
     } catch (error: any) {
       const message = error?.response?.data?.message || error?.message || 'Deposit failed';

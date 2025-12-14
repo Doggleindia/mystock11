@@ -43,6 +43,35 @@ export interface DebitPayload {
   };
 }
 
+export interface WithdrawPayload {
+  amount: number;
+  upiId?: string;
+  bankAccountNumber?: string;
+  ifscCode?: string;
+}
+
+export interface WithdrawResponse {
+  success: boolean;
+  message: string;
+  data: {
+    transaction: {
+      _id: string;
+      amount: number;
+      currency: string;
+      txnType: string;
+      purpose: string;
+      beforeBalance: number;
+      afterBalance: number;
+      status: string;
+      createdAt: string;
+      updatedAt: string;
+    };
+    user: {
+      walletBalance: number;
+    };
+  };
+}
+
 export interface DebitResponse {
   success: boolean;
   message: string;
@@ -160,6 +189,18 @@ class WalletService {
   async getTransactionDetail(transactionId: string): Promise<TransactionDetailResponse> {
     try {
       const response = await axiosInstance.get(`/api/transactions/user/${transactionId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Withdraw amount from wallet
+   */
+  async withdraw(payload: WithdrawPayload): Promise<WithdrawResponse> {
+    try {
+      const response = await axiosInstance.post('/api/transactions/wallet/withdraw', payload);
       return response.data;
     } catch (error) {
       throw error;

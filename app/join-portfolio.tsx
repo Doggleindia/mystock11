@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import axios from "axios";
 
 import MarketOverview from "@/components/portfolio/MarketOverview";
 import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
@@ -23,6 +24,7 @@ import {
     createPortfolioAndJoinContest,
 } from "@/services/portfolioService";
 import walletService from "@/services/walletService";
+import { API_BASE_URL } from "@/services/config";
 import usePortfolioStore from "@/store/portfolioStore";
 
 const PortfolioSummary = ({
@@ -93,6 +95,8 @@ export default function JoinPortfolio() {
   const [portfolios, setPortfolios] = useState<ContestPortfolioPayload[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isJoining, setIsJoining] = useState(false);
+  const [contestDetails, setContestDetails] = useState<any>(null);
+  const [loadingContest, setLoadingContest] = useState(false);
 
   // Stable value; don't early-return based on this
   const contestId = routeContestId || draftPortfolio?.contestId;
@@ -115,6 +119,28 @@ export default function JoinPortfolio() {
       setActiveIndex(0);
     }
   }, [draftPortfolio]);
+
+  // Fetch contest details to get entry fee
+  useEffect(() => {
+    if (!contestId) return;
+
+    const fetchContest = async () => {
+      try {
+        setLoadingContest(true);
+        const response = await axios.get(
+          `${API_BASE_URL}/api/match-contests/admin/${contestId}`
+        );
+        setContestDetails(response.data?.data || null);
+      } catch (error) {
+        console.error('Failed to fetch contest details:', error);
+        setContestDetails(null);
+      } finally {
+        setLoadingContest(false);
+      }
+    };
+
+    fetchContest();
+  }, [contestId]);
 
   const activePortfolio = portfolios[activeIndex];
 
@@ -172,13 +198,15 @@ export default function JoinPortfolio() {
 
       const summaryData = joinResponse?.data;
       
-      // Debit wallet amount for contest join
+      // Debit wallet amount for contest join - use contest entry fee
       let beforeBalance = 0;
       let afterBalance = 0;
-      if (totalCredits > 0) {
+      const entryFee = contestDetails?.entryFee || 0;
+      
+      if (entryFee > 0) {
         try {
           const debitResponse = await walletService.debit({
-            amount: totalCredits,
+            amount: entryFee,
             purpose: 'contest_join',
             meta: {
               contestId: contestId,
@@ -192,7 +220,7 @@ export default function JoinPortfolio() {
             Toast.show({
               type: 'success',
               text1: 'Wallet debited',
-              text2: `₹${totalCredits} debited for contest entry`,
+              text2: `₹${entryFee} debited for contest entry`,
             });
           }
         } catch (debitError: any) {

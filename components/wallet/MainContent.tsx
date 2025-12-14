@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState, useImperativeHandle, forwardRef } from "react";
+import { ScrollView, Text, TouchableOpacity, View, TextInput } from "react-native";
 import walletService from "../../services/walletService";
 import DetailsCard from "./DetailsCard";
 
@@ -7,10 +7,16 @@ interface MainContentProps {
   onAmountChange?: (amount: number) => void;
 }
 
-export default function MainContent({ onAmountChange }: MainContentProps) {
+const MainContent = forwardRef(({ onAmountChange }: MainContentProps, ref) => {
   const [selectedAmount, setSelectedAmount] = useState(100);
+  const [manualAmount, setManualAmount] = useState('');
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    refreshBalance: fetchBalance,
+  }));
 
   useEffect(() => {
     fetchBalance();
@@ -32,42 +38,85 @@ export default function MainContent({ onAmountChange }: MainContentProps) {
 
   const handleAmountSelect = (amount: number) => {
     setSelectedAmount(amount);
+    setManualAmount('');
+    setShowManualInput(false);
     if (onAmountChange) {
       onAmountChange(amount);
+    }
+  };
+
+  const handleManualAmountSubmit = () => {
+    const amount = parseFloat(manualAmount);
+    if (!isNaN(amount) && amount > 0) {
+      setSelectedAmount(amount);
+      if (onAmountChange) {
+        onAmountChange(amount);
+      }
+      setShowManualInput(false);
     }
   };
 
   return (
     <ScrollView className="flex-1 px-4">
       {/* Current Balance */}
-      <View className="flex-row justify-between mt-4">
+      <View className="flex-row justify-between mt-4 mb-4">
         <Text className="text-gray-700 font-medium">Current Balance</Text>
-        <Text className="text-gray-900 font-semibold">₹{walletBalance.toFixed(2)}</Text>
+        <Text className="text-gray-900 font-bold text-lg">₹{Number(walletBalance).toFixed(2)}</Text>
       </View>
 
       {/* Add Amount */}
-      <View className="flex-row mt-3 space-x-2">
-        <View className="flex-1 border border-green-500 rounded-lg px-3 py-2">
-          <Text className="text-green-700 font-semibold">₹{selectedAmount}</Text>
+      <View className="mt-4">
+        <Text className="text-gray-600 text-sm mb-2">Select Amount</Text>
+        <View className="flex-row gap-2 mb-3">
+          {[100, 200, 500, 1000].map((amt) => (
+            <TouchableOpacity
+              key={amt}
+              onPress={() => handleAmountSelect(amt)}
+              className={`flex-1 border rounded-lg py-2 ${selectedAmount === amt && !showManualInput ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}
+            >
+              <Text className={`text-center font-semibold ${selectedAmount === amt && !showManualInput ? 'text-green-700' : 'text-gray-700'}`}>₹{amt}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
-        <TouchableOpacity
-          onPress={() => handleAmountSelect(500)}
-          className={`border rounded-lg px-3 py-2 ${selectedAmount === 500 ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}
-        >
-          <Text className={selectedAmount === 500 ? 'text-green-700 font-semibold' : 'text-gray-700'}>₹500</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handleAmountSelect(1000)}
-          className={`border rounded-lg px-3 py-2 ${selectedAmount === 1000 ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}
-        >
-          <Text className={selectedAmount === 1000 ? 'text-green-700 font-semibold' : 'text-gray-700'}>₹1,000</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handleAmountSelect(2000)}
-          className={`border rounded-lg px-3 py-2 ${selectedAmount === 2000 ? 'border-green-500 bg-green-50' : 'border-gray-300'}`}
-        >
-          <Text className={selectedAmount === 2000 ? 'text-green-700 font-semibold' : 'text-gray-700'}>₹2,000</Text>
-        </TouchableOpacity>
+
+        {/* Manual Amount Input */}
+        {!showManualInput && (
+          <TouchableOpacity
+            onPress={() => setShowManualInput(true)}
+            className="border border-dashed border-gray-400 rounded-lg py-2 mb-3"
+          >
+            <Text className="text-center text-gray-500 font-semibold">+ Custom Amount</Text>
+          </TouchableOpacity>
+        )}
+
+        {showManualInput && (
+          <View className="flex-row gap-2 mb-3">
+            <TextInput
+              className="flex-1 border border-green-500 rounded-lg px-3 py-2 text-sm"
+              placeholder="Enter custom amount"
+              placeholderTextColor="#999"
+              keyboardType="decimal-pad"
+              value={manualAmount}
+              onChangeText={setManualAmount}
+            />
+            <TouchableOpacity
+              onPress={handleManualAmountSubmit}
+              disabled={!manualAmount || parseFloat(manualAmount) <= 0}
+              className="bg-green-600 rounded-lg px-4 py-2 justify-center"
+            >
+              <Text className="text-white font-semibold text-sm">Add</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setShowManualInput(false);
+                setManualAmount('');
+              }}
+              className="border border-gray-300 rounded-lg px-4 py-2 justify-center"
+            >
+              <Text className="text-gray-700 font-semibold text-sm">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Details */}
@@ -103,4 +152,7 @@ export default function MainContent({ onAmountChange }: MainContentProps) {
       </View>
     </ScrollView>
   );
-}
+});
+
+MainContent.displayName = "MainContent";
+export default MainContent;

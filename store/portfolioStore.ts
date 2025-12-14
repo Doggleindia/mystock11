@@ -13,6 +13,8 @@ export interface JoinedContestSummary {
   portfolio?: Record<string, any> | null;
   transactionId?: string | null;
   message?: string;
+  beforeBalance?: number;
+  afterBalance?: number;
 }
 
 interface PortfolioState {
