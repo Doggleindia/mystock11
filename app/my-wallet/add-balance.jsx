@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { useState, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { View } from 'react-native';
 import Header from '../../components/wallet/BallanceHeader';
 import Footer from '../../components/wallet/Footer';

@@ -1,3 +1,4 @@
+import axios from "axios";
 import {
     Stack,
     router,
@@ -14,17 +15,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import axios from "axios";
 
 import MarketOverview from "@/components/portfolio/MarketOverview";
 import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
 import TableHeader from "@/components/portfolio/TableHeader";
+import { API_BASE_URL } from "@/services/config";
 import {
     ContestPortfolioPayload,
     createPortfolioAndJoinContest,
 } from "@/services/portfolioService";
 import walletService from "@/services/walletService";
-import { API_BASE_URL } from "@/services/config";
 import usePortfolioStore from "@/store/portfolioStore";
 
 const PortfolioSummary = ({
