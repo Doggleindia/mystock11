@@ -7,10 +7,6 @@ import walletService from '../../services/walletService';
 
 export default function WithdrawScreen() {
   const [amount, setAmount] = useState('');
-  const [withdrawMethod, setWithdrawMethod] = useState('upi'); // 'upi' or 'bank'
-  const [upiId, setUpiId] = useState('');
-  const [bankAccount, setBankAccount] = useState('');
-  const [ifscCode, setIfscCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleWithdraw = async () => {
@@ -24,50 +20,30 @@ export default function WithdrawScreen() {
       return;
     }
 
-    if (withdrawMethod === 'upi' && !upiId) {
-      Toast.show({
-        type: 'error',
-        text1: 'Missing UPI ID',
-        text2: 'Please enter your UPI ID',
-      });
-      return;
-    }
-
-    if (withdrawMethod === 'bank' && (!bankAccount || !ifscCode)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Missing Details',
-        text2: 'Please enter bank account number and IFSC code',
-      });
-      return;
-    }
-
     try {
       setLoading(true);
       const payload = {
         amount: parseFloat(amount),
       };
 
-      if (withdrawMethod === 'upi') {
-        payload.upiId = upiId;
-      } else {
-        payload.bankAccountNumber = bankAccount;
-        payload.ifscCode = ifscCode;
-      }
-
       const response = await walletService.withdraw(payload);
 
       if (response.success) {
         Toast.show({
           type: 'success',
-          text1: 'Withdrawal Initiated',
-          text2: response.message || 'Amount will be transferred shortly',
+          text1: 'Withdrawal Request Submitted',
+          text2: response.message || 'Your withdrawal request has been submitted',
         });
         // Reset form
         setAmount('');
-        setUpiId('');
-        setBankAccount('');
-        setIfscCode('');
+        // Navigate to withdrawal history
+        router.push('/my-wallet/withdraw-history');
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Withdrawal Failed',
+          text2: response.message || 'Invalid withdrawal amount',
+        });
       }
     } catch (error) {
       const message =
@@ -113,103 +89,6 @@ export default function WithdrawScreen() {
               editable={!loading}
             />
           </View>
-        </View>
-
-        {/* Withdrawal Method Selection */}
-        <View className="mt-6">
-          <Text className="text-gray-700 font-medium mb-3">Withdrawal Method</Text>
-
-          {/* UPI Option */}
-          <TouchableOpacity
-            onPress={() => setWithdrawMethod('upi')}
-            className={`border-2 rounded-lg p-4 mb-3 ${
-              withdrawMethod === 'upi' ? 'border-green-500 bg-green-50' : 'border-gray-200'
-            }`}
-            disabled={loading}
-          >
-            <View className="flex-row items-center">
-              <View
-                className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                  withdrawMethod === 'upi'
-                    ? 'border-green-500 bg-green-500'
-                    : 'border-gray-300'
-                }`}
-              >
-                {withdrawMethod === 'upi' && (
-                  <Text className="text-white text-xs font-bold">✓</Text>
-                )}
-              </View>
-              <Text
-                className={`ml-3 font-semibold ${
-                  withdrawMethod === 'upi' ? 'text-green-600' : 'text-gray-700'
-                }`}
-              >
-                UPI Transfer
-              </Text>
-            </View>
-
-            {withdrawMethod === 'upi' && (
-              <TextInput
-                className="mt-3 border border-gray-300 rounded px-3 py-2"
-                placeholder="Enter UPI ID (e.g., yourname@upi)"
-                placeholderTextColor="#999"
-                value={upiId}
-                onChangeText={setUpiId}
-                editable={!loading}
-              />
-            )}
-          </TouchableOpacity>
-
-          {/* Bank Transfer Option */}
-          <TouchableOpacity
-            onPress={() => setWithdrawMethod('bank')}
-            className={`border-2 rounded-lg p-4 ${
-              withdrawMethod === 'bank' ? 'border-green-500 bg-green-50' : 'border-gray-200'
-            }`}
-            disabled={loading}
-          >
-            <View className="flex-row items-center">
-              <View
-                className={`w-5 h-5 rounded-full border-2 items-center justify-center ${
-                  withdrawMethod === 'bank'
-                    ? 'border-green-500 bg-green-500'
-                    : 'border-gray-300'
-                }`}
-              >
-                {withdrawMethod === 'bank' && (
-                  <Text className="text-white text-xs font-bold">✓</Text>
-                )}
-              </View>
-              <Text
-                className={`ml-3 font-semibold ${
-                  withdrawMethod === 'bank' ? 'text-green-600' : 'text-gray-700'
-                }`}
-              >
-                Bank Transfer
-              </Text>
-            </View>
-
-            {withdrawMethod === 'bank' && (
-              <View className="mt-3 space-y-2">
-                <TextInput
-                  className="border border-gray-300 rounded px-3 py-2 mb-2"
-                  placeholder="Account Number"
-                  placeholderTextColor="#999"
-                  value={bankAccount}
-                  onChangeText={setBankAccount}
-                  editable={!loading}
-                />
-                <TextInput
-                  className="border border-gray-300 rounded px-3 py-2"
-                  placeholder="IFSC Code"
-                  placeholderTextColor="#999"
-                  value={ifscCode}
-                  onChangeText={setIfscCode}
-                  editable={!loading}
-                />
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
 
         {/* Info Box */}

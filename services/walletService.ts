@@ -45,31 +45,61 @@ export interface DebitPayload {
 
 export interface WithdrawPayload {
   amount: number;
-  upiId?: string;
-  bankAccountNumber?: string;
-  ifscCode?: string;
 }
 
 export interface WithdrawResponse {
   success: boolean;
   message: string;
-  data: {
-    transaction: {
-      _id: string;
-      amount: number;
-      currency: string;
-      txnType: string;
-      purpose: string;
-      beforeBalance: number;
-      afterBalance: number;
-      status: string;
-      createdAt: string;
-      updatedAt: string;
+  data?: {
+    user: string;
+    amount: number;
+    currency: string;
+    tdsAmount: number;
+    tdsPercentage: number;
+    txnType: string;
+    purpose: string;
+    status: string;
+    paymentMethod: string;
+    meta: {
+      requestedAt: string;
     };
-    user: {
-      walletBalance: number;
-    };
+    _id: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
   };
+}
+
+export interface WithdrawHistoryItem {
+  _id: string;
+  amount: number;
+  tdsAmount: number;
+  tdsPercentage: number;
+  status: string;
+  createdAt: string;
+  netAmount?: number;
+}
+
+export interface WithdrawHistoryResponse {
+  success: boolean;
+  data: WithdrawHistoryItem[];
+}
+
+export interface TDSHistoryItem {
+  _id: string;
+  amount: number;
+  tdsAmount: number;
+  tdsPercentage: number;
+  createdAt: string;
+  netAmount: number;
+}
+
+export interface TDSHistoryResponse {
+  success: boolean;
+  total: number;
+  page: number;
+  pages: number;
+  data: TDSHistoryItem[];
 }
 
 export interface DebitResponse {
@@ -200,7 +230,31 @@ class WalletService {
    */
   async withdraw(payload: WithdrawPayload): Promise<WithdrawResponse> {
     try {
-      const response = await axiosInstance.post('/api/transactions/wallet/withdraw', payload);
+      const response = await axiosInstance.post('/api/transactions/withdraw/request', payload);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get withdrawal history
+   */
+  async getWithdrawHistory(): Promise<WithdrawHistoryResponse> {
+    try {
+      const response = await axiosInstance.get('/api/transactions/withdraw/history');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get TDS history
+   */
+  async getTDSHistory(): Promise<TDSHistoryResponse> {
+    try {
+      const response = await axiosInstance.get('/api/transactions/user/tds/history');
       return response.data;
     } catch (error) {
       throw error;

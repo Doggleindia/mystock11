@@ -32,7 +32,7 @@ export default function MyTransactionsScreen() {
     try {
       setLoading(true);
       // Build params based on filters and active tab
-      const params: any = {
+      const params = {
         page: filters.page,
         limit: filters.limit,
       };
@@ -59,8 +59,8 @@ export default function MyTransactionsScreen() {
       const txData = response.data || [];
 
       // Transform API response to match existing UI structure
-      const groupedByDate: { [key: string]: any[] } = {};
-      txData.forEach((tx: any) => {
+      const groupedByDate = {};
+      txData.forEach((tx) => {
         const date = new Date(tx.createdAt).toLocaleDateString('en-GB', {
           day: '2-digit',
           month: 'long',

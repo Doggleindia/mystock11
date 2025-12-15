@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Circle, Line, Path, Rect, Svg } from "react-native-svg";
+import { Circle, Line, Path, Polyline, Rect, Svg } from "react-native-svg";
 import { useAuthStore } from "../../store/authStore";
 
 // --- SVG Icons for React Native ---
@@ -145,6 +145,40 @@ const HelpIcon = () => (
   </Svg>
 );
 
+const WithdrawalHistoryIcon = () => (
+  <Svg
+    height={24}
+    width={24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#6B7280"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <Path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <Polyline points="14,2 14,8 20,8" />
+    <Line x1="16" y1="13" x2="8" y2="13" />
+    <Line x1="16" y1="17" x2="8" y2="17" />
+    <Polyline points="10,9 9,9 8,9" />
+  </Svg>
+);
+
+const TDSIcon = () => (
+  <Svg
+    height="24"
+    width="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#6B7280"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <Path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></Path>
+  </Svg>
+);
+
 // --- Reusable Components ---
 
 const Header = ({ title }) => (
@@ -246,7 +280,16 @@ export default function App() {
   const KycDetials = () => {
     router.push("/kyc/kyc-details");
   };
-   const HelpAndSupport = () => {
+  const WithdrawMoney = () => {
+    router.push("/my-wallet/withdraw");
+  };
+  const WithdrawHistory = () => {
+    router.push("/my-wallet/withdraw-history");
+  };
+  const TDSHistory = () => {
+    router.push("/my-wallet/tds-history");
+  };
+  const HelpAndSupport = () => {
     router.push("/kyc/help-support");
   };
   return (
@@ -292,11 +335,25 @@ export default function App() {
                 amount={winningsBalance.toFixed(2)}
                 tooltipContent={winningsTooltip}
                 actionComponent={
-                  <TouchableOpacity className="border border-gray-400 py-1 px-3 rounded">
-                    <Text className="text-gray-700 text-xs font-medium">
-                      Verify to withdraw
-                    </Text>
-                  </TouchableOpacity>
+                  !user?.user?.isKycCompleted ? (
+                    <TouchableOpacity 
+                      onPress={KycDetials}
+                      className="border border-gray-400 py-1 px-3 rounded"
+                    >
+                      <Text className="text-gray-700 text-xs font-medium">
+                        Verify to withdraw
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity 
+                      onPress={WithdrawMoney}
+                      className="bg-red-500 py-1 px-3 rounded"
+                    >
+                      <Text className="text-white text-xs font-medium">
+                        Withdraw
+                      </Text>
+                    </TouchableOpacity>
+                  )
                 }
               />
               <BalanceInfoRow
@@ -326,6 +383,36 @@ export default function App() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              onPress={WithdrawHistory}
+              className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5"
+            >
+              <View className="flex-row items-center">
+                <View className="mr-3">
+                  <WithdrawalHistoryIcon />
+                </View>
+                <Text className="text-gray-800 text-sm font-medium">
+                  Withdrawal History
+                </Text>
+              </View>
+              <ChevronRightIcon />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={TDSHistory}
+              className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5"
+            >
+              <View className="flex-row items-center">
+                <View className="mr-3">
+                  <TDSIcon />
+                </View>
+                <Text className="text-gray-800 text-sm font-medium">
+                  TDS History
+                </Text>
+              </View>
+              <ChevronRightIcon />
+            </TouchableOpacity>
+
+            <TouchableOpacity
               onPress={KycDetials}
               className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5"
             >
@@ -340,7 +427,7 @@ export default function App() {
               <ChevronRightIcon />
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => navigation.navigate("ManagePayment")}
               className="bg-white rounded-lg border border-gray-200 p-4 flex-row items-center justify-between mb-2.5"
             >
@@ -353,7 +440,7 @@ export default function App() {
                 </Text>
               </View>
               <ChevronRightIcon />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
               onPress={HelpAndSupport}
