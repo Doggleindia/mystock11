@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import BalanceHeader from '../../components/wallet/BallanceHeader';
