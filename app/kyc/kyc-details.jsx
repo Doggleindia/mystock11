@@ -32,15 +32,7 @@ const getScreens = (user) => [
     verified: !!user?.user?.email, 
     editRoute: "/kyc/verify-email", 
     type: "edit" 
-  },
-  { 
-    label: "PAN Card", 
-    value: user?.user?.ssnLast4 ? `****${user.user.ssnLast4}` : "Not provided", 
-    verified: user?.user?.isVerified || false, 
-    editRoute: "/kyc/verify-pan", 
-    viewRoute: "/kyc/pan-details", 
-    type: "both" 
-  },
+  },,
   { 
     label: "Bank Account", 
     value: user?.user?.bankDetails?.accountNumberLast4 ? `****${user.user.bankDetails.accountNumberLast4}` : "Not provided", 
