@@ -1,8 +1,7 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import React from 'react';
 import { Stack } from 'expo-router';
-import BalanceHeader from '../../components/wallet/BallanceHeader';
+import { Image, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import BalanceHeader from '../../components/wallet/BallanceHeader';
 import { useAuthStore } from '../../store/authStore';
 
 const BankIcon = () => (
