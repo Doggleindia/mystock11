@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useRef, useState } from 'react';
 import { View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from '../../components/wallet/BallanceHeader';
 import Footer from '../../components/wallet/Footer';
 import MainContent from '../../components/wallet/MainContent';
@@ -24,12 +25,13 @@ const AddBalance = () => {
         headerShown: false, // 👈 hides the auto header
       }}
     />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
     <View className="flex-1 bg-white">
       <Header  title='Add Balance'/>
       <MainContent ref={mainContentRef} onAmountChange={setSelectedAmount} />
       <Footer amount={selectedAmount} loading={loading} onSuccess={handleDepositSuccess} />
     </View>
-
+</SafeAreaView>
     </>
   )
 }

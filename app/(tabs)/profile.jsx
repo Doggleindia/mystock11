@@ -158,7 +158,7 @@ export default function ProfileHomeScreen() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <ScrollView className="flex-1 bg-gray-100">
         <Stack.Screen options={{ headerShown: false }} />
         

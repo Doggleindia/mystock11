@@ -3,12 +3,12 @@ import usePortfolioStore from "@/store/portfolioStore";
 import { Stack, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  Alert,
-  FlatList,
-  Modal,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    FlatList,
+    Modal,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CaptainInfoBar from "../components/select-captainvc/CaptainInfoBar";
@@ -81,9 +81,9 @@ export default function SelectCaptainVC() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-      <Stack.Screen options={{ headerShown: false }} />
-
+    <>
+    <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <View className="flex-1 bg-white">
         <PortfolioHeader timeLeft="1h : 47m" />
         <CaptainInfoBar captain={captain} viceCaptain={viceCaptain} />
@@ -157,5 +157,6 @@ export default function SelectCaptainVC() {
       </Modal>
 
     </SafeAreaView>
+    </>
   );
 }

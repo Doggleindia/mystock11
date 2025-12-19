@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import BalanceHeader from '../../components/wallet/BallanceHeader';
 import walletService from '../../services/walletService';
@@ -72,6 +73,7 @@ export default function WithdrawScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="Withdraw Money" />
       <ScrollView className="flex-1 bg-white px-4">
         {/* Amount Input */}
@@ -116,6 +118,7 @@ export default function WithdrawScreen() {
           )}
         </TouchableOpacity>
       </ScrollView>
+      </SafeAreaView>
     </>
   );
 }

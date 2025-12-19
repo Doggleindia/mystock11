@@ -5,6 +5,7 @@ import StockGraph from '@/components/stock-detail/StockGraph';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Sample data - replace with real data
 const mockGraphData = {
@@ -25,8 +26,9 @@ export default function StockDetailScreen() {
           headerShown: false,
         }}
       />
-      <StockDetailHeader stocktitle={symbol as string}/>
-      <ScrollView className="flex-1 bg-gray-50 p-4">
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
+        <StockDetailHeader stocktitle={symbol as string}/>
+        <ScrollView className="flex-1 bg-gray-50 p-4">
         <StockDetailCard
           stockName={symbol as string}
           currentPrice="2,030.50"
@@ -48,7 +50,8 @@ export default function StockDetailScreen() {
         <StockAbout 
           description={mockStockDescription}
         />
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 }

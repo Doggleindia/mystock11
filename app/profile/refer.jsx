@@ -1,10 +1,12 @@
 import { Stack } from 'expo-router';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 export default function ReferAndEarnScreen() {
   return (
       <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="Bank Details" />
     <View className="flex-1 bg-white px-5 pt-7">
       <Text className="text-lg font-semibold text-gray-800 mb-2">Refer and Earn</Text>
@@ -15,6 +17,7 @@ export default function ReferAndEarnScreen() {
       {/* Show referral code or link here */}
       <Text className="text-xs text-blue-600">Your referral code: AB123</Text>
     </View>
+    </SafeAreaView>
     </>
   );
 }

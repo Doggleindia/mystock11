@@ -14,7 +14,7 @@ export default function AppHeader({
 }) {
   return (
     <View  style={{
-        // marginTop:20,
+        marginTop:20,
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 15,

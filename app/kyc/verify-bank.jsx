@@ -1,19 +1,20 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import { Stack } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import BalanceHeader from '../../components/wallet/BallanceHeader';
-import { useAuthStore } from '../../store/authStore';
 import { API_BASE_URL } from '../../services/config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthStore } from '../../store/authStore';
 
 const BankIcon = () => (
   <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#767676" strokeWidth={2}>
@@ -109,6 +110,7 @@ const storedToken = await AsyncStorage.getItem('token');
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="Verify Bank Account" />
 
       <View className="flex-1 bg-white px-4 py-6">
@@ -175,6 +177,7 @@ const storedToken = await AsyncStorage.getItem('token');
           </Text>
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
     </>
   );
 }

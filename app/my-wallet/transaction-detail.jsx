@@ -1,6 +1,7 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Circle, Path, Svg } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import HelpSupport from '../../components/wallet/transaction/HelpSupport';
@@ -61,10 +62,12 @@ export default function TransactionDetail() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
         <BalanceHeader title="My Transactions" />
         <View className="flex-1 bg-white items-center justify-center">
           <ActivityIndicator size="large" color="#ef4444" />
         </View>
+        </SafeAreaView>
       </>
     );
   }
@@ -73,10 +76,12 @@ export default function TransactionDetail() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
         <BalanceHeader title="My Transactions" />
         <View className="flex-1 bg-white items-center justify-center">
           <Text className="text-red-500">{error || 'Transaction not found'}</Text>
         </View>
+        </SafeAreaView>
       </>
     );
   }
@@ -84,6 +89,7 @@ export default function TransactionDetail() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="My Transactions" />
       <View className="flex-1 bg-white px-0 pt-0">
         {/* Top Section: Amount and Status */}
@@ -150,6 +156,7 @@ export default function TransactionDetail() {
         {/* Help and Support */}
         <HelpSupport />
       </View>
+      </SafeAreaView>
     </>
   );
 }

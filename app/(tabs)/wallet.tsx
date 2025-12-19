@@ -9,14 +9,16 @@ const handleJoin = () => {
     router.push('/kyc-verification');
   }
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <>
     <Stack.Screen
       options={{
         headerShown: false,
       }}
     />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
     <WalletScreen/>
     </SafeAreaView>
+    </>
   )
 }
 

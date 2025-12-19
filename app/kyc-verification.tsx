@@ -1,12 +1,16 @@
 import KYCVerificationScreen from '@/components/wallet/KYCVerificationScreen'
+import { Stack } from 'expo-router'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const KycVerification = () => {
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <>
+    <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
     <KYCVerificationScreen/>
     </SafeAreaView>
+    </>
   )
 }
 

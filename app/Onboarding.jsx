@@ -6,8 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const OnboardingScreen = () => {
      const navigation = useNavigation();
      return(
-     <SafeAreaView style={styles.safeContainer}>
+     <>
      <Stack.Screen options={{ headerShown: false }} />
+     <SafeAreaView style={styles.safeContainer}>
   <View style={styles.container}>
     <TouchableOpacity style={styles.skip} 
     onPress={() => navigation.replace('Login')}
@@ -32,7 +33,8 @@ const OnboardingScreen = () => {
       </TouchableOpacity>
     </View>
   </View>
-  </SafeAreaView>)
+  </SafeAreaView>
+  </>)
 };
 
 const styles = StyleSheet.create({

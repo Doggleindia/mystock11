@@ -1,6 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import DateHeader from "../../components/wallet/transaction/DateHeader";
 import TransactionCard from "../../components/wallet/transaction/TransactionCard";
@@ -121,6 +122,7 @@ export default function MyTransactionsScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="My Transactions" />
       <View className="flex-1 bg-white">
         {/* Tab Buttons */}
@@ -203,6 +205,7 @@ export default function MyTransactionsScreen() {
           })}
         </ScrollView>
       </View>
+      </SafeAreaView>
     </>
   );
 }

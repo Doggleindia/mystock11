@@ -61,9 +61,10 @@ export default function ProfileInformationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <>
+    <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <ScrollView className="flex-1 bg-white">
-        <Stack.Screen options={{ headerShown: false }} />
         <BalanceHeader title="My Information" />
         <View className="flex-1 bg-white px-5 pt-7 pb-8">
         
@@ -164,5 +165,6 @@ export default function ProfileInformationScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
+    </>
   );
 }

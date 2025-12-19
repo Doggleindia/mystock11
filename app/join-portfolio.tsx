@@ -305,8 +305,9 @@ export default function JoinPortfolio() {
   }, [activePortfolio]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-      <Stack.Screen options={{ headerShown: false }} />
+    <>
+    <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <View className="flex-1 bg-white">
         {!hasContest ? (
           // Fallback UI when there is no contestId
@@ -430,5 +431,6 @@ export default function JoinPortfolio() {
         )}
       </View>
     </SafeAreaView>
+    </>
   );
 }

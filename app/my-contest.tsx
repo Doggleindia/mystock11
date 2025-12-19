@@ -31,6 +31,8 @@ const formatPercentage = (value?: number | null) => {
   return `${value >= 0 ? "+" : ""}${formatted}%`;
 };
 
+import { SafeAreaView } from "react-native-safe-area-context";
+
 const CompletedContestScreen = () => {
   const [tab, setTab] = useState("My Contest");
   const [loading, setLoading] = useState(false);
@@ -284,8 +286,9 @@ const CompletedContestScreen = () => {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 bg-gray-50">
-        <Header title="Beginner’s Arena" />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
+        <View className="flex-1 bg-gray-50">
+          <Header title="Beginner's Arena" />
 
         {/* Tabs */}
         <View className="flex-row border-b border-gray-200 bg-white">
@@ -318,6 +321,7 @@ const CompletedContestScreen = () => {
           {renderContent()}
         </ScrollView>
       </View>
+      </SafeAreaView>
     </>
   );
 };

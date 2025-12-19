@@ -5,6 +5,7 @@ import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Stack } from "expo-router";
 import React, { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CompletedContestScreen = () => {
   const [tab, setTab] = useState("My Contest");
@@ -172,6 +173,7 @@ const CompletedContestScreen = () => {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <View className="flex-1 bg-gray-50">
         <Header title="Beginner’s Arena" />
 
@@ -206,6 +208,7 @@ const CompletedContestScreen = () => {
           {renderContent()}
         </ScrollView>
       </View>
+      </SafeAreaView>
     </>
   );
 };

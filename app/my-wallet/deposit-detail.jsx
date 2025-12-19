@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Svg, Circle, Path } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { Stack } from 'expo-router';
@@ -32,6 +33,7 @@ export default function DepositDetailScreen() {
         headerShown: false, // 👈 hides the auto header
       }}
     />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
         <BalanceHeader title="Deposit Details" />
     <View className="flex-1 bg-white">
 
@@ -122,6 +124,7 @@ export default function DepositDetailScreen() {
         <Text className="text-lg text-gray-400">{'>'}</Text>
       </TouchableOpacity>
     </View>
+</SafeAreaView>
 </>
   );
 }

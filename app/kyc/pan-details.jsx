@@ -1,15 +1,16 @@
-import { View, Text } from 'react-native';
-import React from 'react';
-import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { Stack } from 'expo-router';
+import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BalanceHeader from "../../components/wallet/BallanceHeader";
 export default function PANDetailsScreen() {
   return (
      <>
     <Stack.Screen
-        options={{  
+        options={{
             headerShown: false, // 👈 hides the auto header
         }}
     />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
     <BalanceHeader title="KYC Details" />
     <View className="flex-1 bg-white px-4 pt-5">
       <Text className="text-xs text-gray-600 mb-2">Name</Text>
@@ -24,6 +25,7 @@ export default function PANDetailsScreen() {
         <Text className="text-xs text-gray-700">• It takes max 1 working day to get PAN verified</Text>
       </View>
     </View>
+    </SafeAreaView>
     </>
   );
 }

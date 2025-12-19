@@ -7,9 +7,9 @@ import { API_BASE_URL } from "@/services/config";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  View
+    ActivityIndicator,
+    FlatList,
+    View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -161,7 +161,8 @@ async function fetchContestsForMatch(matchId:any) {
 
   const filteredData = filterContests(niftyData);
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }} edges={['top', 'left', 'right']}>
+    <>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#f7f7f7" }} edges={['left', 'right', 'bottom']}>
       <FlatList
         data={filteredData}
         keyExtractor={(it, index) => it.id || `contest-${index}`}
@@ -209,5 +210,6 @@ async function fetchContestsForMatch(matchId:any) {
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
+    </>
   );
 }

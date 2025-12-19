@@ -15,7 +15,6 @@ export default function BannerCarousel() {
       console.log("API_BASE_URL", API_BASE_URL);
       try {
         const res = await axios.get(`${API_BASE_URL}/api/admin/banner/all`);
-        console.log("res", res.data);
         const activeBanners = res.data?.banners?.filter(b => b.isActive);
         setBanners(activeBanners || []);
       } catch (error) {

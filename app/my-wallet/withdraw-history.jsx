@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import BalanceHeader from '../../components/wallet/BallanceHeader';
 import walletService from '../../services/walletService';
@@ -67,10 +68,12 @@ export default function WithdrawHistoryScreen() {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
+        <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
         <BalanceHeader title="Withdrawal History" />
         <View className="flex-1 justify-center items-center bg-white">
           <ActivityIndicator size="large" color="#EF4444" />
         </View>
+        </SafeAreaView>
       </>
     );
   }
@@ -78,6 +81,7 @@ export default function WithdrawHistoryScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="Withdrawal History" />
       <ScrollView className="flex-1 bg-gray-50">
         <View className="p-4">
@@ -123,6 +127,7 @@ export default function WithdrawHistoryScreen() {
           )}
         </View>
       </ScrollView>
+      </SafeAreaView>
     </>
   );
 }

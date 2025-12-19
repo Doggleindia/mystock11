@@ -10,7 +10,7 @@ interface PortfolioHeaderProps {
 export default function PortfolioHeader({ timeLeft }: PortfolioHeaderProps) {
   return (
     <View className="bg-[#EA484F]">
-      <View className="pt-8 px-4 pb-3 flex-row items-center">
+      <View className="py-3 px-4 mt-5  flex-row items-center">
         <Pressable onPress={() => router.back()} className="mr-3">
           <Ionicons name="arrow-back" size={24} color="white" />
         </Pressable>

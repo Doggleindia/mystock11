@@ -41,7 +41,7 @@
     },
     "extra": {
       "router": {},
-      "API_BASE_URL": "http://localhost:5500",
+      "API_BASE_URL": "http://10.236.40.12:5500",
       "eas": {
         "projectId": "b2bab1ac-f3f6-4c32-947d-83ca15bb61a6"
       }

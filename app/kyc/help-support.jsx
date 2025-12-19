@@ -1,6 +1,7 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Stack } from 'expo-router';
+import { useRef, useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 
 // Example help query categories
@@ -49,6 +50,7 @@ export default function HelpSupportScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="Help and support" />
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: "white" }}
@@ -124,6 +126,7 @@ export default function HelpSupportScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
   );
 }

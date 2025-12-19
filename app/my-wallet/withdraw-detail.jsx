@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Svg, Circle, Path } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { Stack } from 'expo-router';
@@ -60,6 +61,7 @@ const WithdrawDetailScreen = ({
         headerShown: false, // 👈 hides the auto header
       }}
     />
+        <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
         <BalanceHeader title="My Transactions" />
     <View className="flex-1 bg-white">
       {/* Top Header */}
@@ -154,8 +156,9 @@ const WithdrawDetailScreen = ({
         </View>
         <Text className="text-lg text-gray-400">{'>'}</Text>
       </TouchableOpacity>
-    </View>
-</>
+    </View>   
+    </SafeAreaView>
+    </>
   );
 };
 

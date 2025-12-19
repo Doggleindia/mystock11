@@ -12,9 +12,9 @@ export default function Header({title}: {title: string}) {
           colors={["#0E1116", "#4F0905", "#0E1116"]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
-          className="px-4 "
+          className="px-4 mt-15"
         >
-      <View >
+      <View  className="mt-5">
               <View className="py-5 px-2  flex-row items-center">
                 <Pressable onPress={() => router.back()} className="mr-3">
                   <Ionicons name="arrow-back" size={24} color="white" />

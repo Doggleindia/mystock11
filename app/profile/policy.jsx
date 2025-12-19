@@ -1,11 +1,12 @@
-import { View, Text, ScrollView } from 'react-native';
-import React from 'react';
-import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { Stack } from 'expo-router';
+import { ScrollView, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BalanceHeader from "../../components/wallet/BallanceHeader";
 export default function PolicyScreen() {
   return (
       <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="Bank Details" />
     <ScrollView className="flex-1 bg-white px-5 pt-7">
       <Text className="text-lg font-bold text-gray-700 mb-6">Terms and Policy</Text>
@@ -18,6 +19,7 @@ export default function PolicyScreen() {
         Privacy, security, and usage details go here.
       </Text>
     </ScrollView>
+    </SafeAreaView>
     </>
   );
 }

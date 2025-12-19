@@ -6,7 +6,7 @@ export default function Header() {
   return (
     <View
       style={{
-        // marginTop:20,
+        marginTop:20,
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: 15,

@@ -2,20 +2,21 @@ import MyPortfolio from "@/components/my-contest/MyPortfolio";
 import WinnerTab from "@/components/my-contest/WinnerTab";
 import Header from "@/components/wallet/BallanceHeader";
 import {
-  fetchMyPortfolios,
-  PortfolioRecord,
+    fetchMyPortfolios,
+    PortfolioRecord,
 } from "@/services/portfolioService";
 import usePortfolioStore from "@/store/portfolioStore";
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const currency = (n?: number | null) =>
   typeof n === "number" && !Number.isNaN(n)
@@ -164,7 +165,8 @@ export default function ContestDetailScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <View className="flex-1 bg-gray-50">
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
+        <View className="flex-1 bg-gray-50">
         <Header title={contestInfo?.name || "Contest Details"} />
 
         <View className="bg-white rounded-xl p-4 shadow-sm mb-4 mx-2 mt-3">
@@ -258,7 +260,8 @@ export default function ContestDetailScreen() {
             renderTabContent()
           )}
         </ScrollView>
-      </View>
+        </View>
+      </SafeAreaView>
     </>
   );
 }

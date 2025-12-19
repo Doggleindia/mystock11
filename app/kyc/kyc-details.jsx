@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { useAuthStore } from '../../store/authStore';
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 const VerifiedBadge = () => (
   <View className="bg-green-50 px-2 py-1 rounded-lg ml-1">
     <Text className="text-xs text-green-700 font-semibold">Verified</Text>
@@ -63,6 +63,7 @@ export default function KYCDetailsScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <BalanceHeader title="KYC Details" />
       <View className="flex-1 bg-white">
         <View className="pt-3">
@@ -102,6 +103,7 @@ export default function KYCDetailsScreen() {
           <Text className="text-xs text-gray-700">• It takes max 1 working day to get PAN verified</Text>
         </View>
       </View>
+      </SafeAreaView>
     </>
   );
 }

@@ -106,13 +106,13 @@ export default function CreatePortfolio() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-   
+    <>
+    <Stack.Screen
+      options={{
+        headerShown: false,
+      }}
+    />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <View className="flex-1 bg-white">
         <PortfolioHeader timeLeft="1h : 47m" />
         
@@ -160,5 +160,6 @@ export default function CreatePortfolio() {
         />
       </View>
     </SafeAreaView>
+    </>
   );
 }

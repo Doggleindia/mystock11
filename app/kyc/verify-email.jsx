@@ -1,15 +1,16 @@
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import React from 'react';
-import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { router, Stack } from 'expo-router';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import BalanceHeader from "../../components/wallet/BallanceHeader";
 export default function EmailVerifyScreen() {
   return (
      <>
     <Stack.Screen
-        options={{  
+        options={{
             headerShown: false, // 👈 hides the auto header
         }}
     />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
     <BalanceHeader title="Verify Email" />
     <View className="flex-1 bg-white px-4 pt-5">
       <Text className="text-xs text-gray-600 mb-1">Enter the email you want to use</Text>
@@ -22,6 +23,7 @@ export default function EmailVerifyScreen() {
         <Text className="text-base text-white font-bold">Get OTP</Text>
       </TouchableOpacity>
     </View>
-</>
+    </SafeAreaView>
+    </>
   );
 }

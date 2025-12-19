@@ -27,8 +27,9 @@ const ContestDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <>
     <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
     <View className="flex-1 bg-white">
       {/* ===== Header ===== */}
       <Header title="Beginner's Arena" />
@@ -62,6 +63,7 @@ const ContestDetailScreen = () => {
       <ScrollView className="flex-1 bg-gray-50">{renderContent()}</ScrollView>
     </View>
     </SafeAreaView>
+    </>
   );
 };
 

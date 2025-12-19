@@ -42,7 +42,7 @@ export default function ContestDetails() {
   // console.log(contest,"contestData")
   return (
     <>
-    <SafeAreaView style={{ flex: 1 }} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
       <Stack.Screen
         options={{
           headerShown: false, // 👈 hides the auto header
