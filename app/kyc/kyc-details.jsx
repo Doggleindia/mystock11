@@ -1,10 +1,10 @@
 import { Stack, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Path, Svg } from 'react-native-svg';
 import BalanceHeader from "../../components/wallet/BallanceHeader";
 import { useAuthStore } from '../../store/authStore';
-import { SafeAreaView } from 'react-native-safe-area-context';
 const VerifiedBadge = () => (
   <View className="bg-green-50 px-2 py-1 rounded-lg ml-1">
     <Text className="text-xs text-green-700 font-semibold">Verified</Text>
@@ -32,7 +32,7 @@ const getScreens = (user) => [
     verified: !!user?.user?.email, 
     editRoute: "/kyc/verify-email", 
     type: "edit" 
-  },,
+  },
   { 
     label: "Bank Account", 
     value: user?.user?.bankDetails?.accountNumberLast4 ? `****${user.user.bankDetails.accountNumberLast4}` : "Not provided", 
