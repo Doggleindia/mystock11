@@ -2,20 +2,20 @@ import MyPortfolio from "@/components/my-contest/MyPortfolio";
 import WinnerTab from "@/components/my-contest/WinnerTab";
 import Header from "@/components/wallet/BallanceHeader";
 import {
-    fetchMyPortfolios,
-    PortfolioRecord,
+  fetchMyPortfolios,
+  PortfolioRecord,
 } from "@/services/portfolioService";
 import usePortfolioStore from "@/store/portfolioStore";
 import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { router, Stack, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

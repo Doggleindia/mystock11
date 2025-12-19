@@ -3,12 +3,12 @@ import usePortfolioStore from "@/store/portfolioStore";
 import { Stack, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-    Alert,
-    FlatList,
-    Modal,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CaptainInfoBar from "../components/select-captainvc/CaptainInfoBar";

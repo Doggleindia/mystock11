@@ -1,17 +1,17 @@
 import axios from "axios";
 import {
-    Stack,
-    router,
-    useLocalSearchParams,
-    useRootNavigationState,
+  Stack,
+  router,
+  useLocalSearchParams,
+  useRootNavigationState,
 } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -21,8 +21,8 @@ import PortfolioHeader from "@/components/portfolio/PortfolioHeader";
 import TableHeader from "@/components/portfolio/TableHeader";
 import { API_BASE_URL } from "@/services/config";
 import {
-    ContestPortfolioPayload,
-    createPortfolioAndJoinContest,
+  ContestPortfolioPayload,
+  createPortfolioAndJoinContest,
 } from "@/services/portfolioService";
 import walletService from "@/services/walletService";
 import usePortfolioStore from "@/store/portfolioStore";
