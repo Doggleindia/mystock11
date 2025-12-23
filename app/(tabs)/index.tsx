@@ -3,8 +3,10 @@ import ContestCard, { Contest } from "@/components/home/ContestCard";
 import FilterBar from "@/components/home/FilterBar";
 import Header from "@/components/home/Header";
 import SegmentedTabs from "@/components/home/SegmentedTabs";
+import axiosInstance from "@/services/axiosInstance";
 import { API_BASE_URL } from "@/services/config";
 import { useAuthStore } from "@/store/authStore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
@@ -29,6 +31,7 @@ export default function Home() {
   const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
   const [sort, setSort] = useState<"recommended" | "popular">("recommended");
   const { user, fetchProfile } = useAuthStore();
+  const [availableStatusTabs, setAvailableStatusTabs] = useState<Array<"upcoming" | "live" | "completed">>([]);
   const [filters, setFilters] = useState<{
     entryRange: FilterRange | null;
     maxEntryRange: FilterRange | null;
@@ -53,8 +56,75 @@ export default function Home() {
   const [loadingContests, setLoadingContests] = useState(false);
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
 
+  // Check which status tabs have data
+  const checkAvailableStatusTabs = async () => {
+    const available: Array<"upcoming" | "live" | "completed"> = [];
+    
+    try {
+      // Check upcoming
+      const upcomingRes = await axios.get(`${API_BASE_URL}/api/match-contests/status?statusFilter=upcoming`);
+      if (upcomingRes.data?.data?.length > 0) {
+        available.push('upcoming');
+      }
+    } catch (err) {
+      console.error("Error checking upcoming contests:", err);
+    }
+    
+    try {
+      // Check live
+      const liveRes = await axios.get(`${API_BASE_URL}/api/match-contests/status?statusFilter=live`);
+      if (liveRes.data?.data?.length > 0) {
+        available.push('live');
+      }
+    } catch (err) {
+      console.error("Error checking live contests:", err);
+    }
+    
+    try {
+      // Check completed (from profile or my-portfolios) - use axiosInstance for automatic token
+      let hasCompleted = false;
+      
+      // Try getProfile first
+      try {
+        const profileRes = await axiosInstance.get(`/api/auth/getprofile`);
+        const contestHistory = profileRes.data?.profile?.contestHistory || [];
+        if (contestHistory.length > 0) {
+          hasCompleted = true;
+        }
+      } catch (profileErr) {
+        // Fallback to my-portfolios
+        try {
+          const portfolioRes = await axiosInstance.get(`/api/portfolios/my-portfolios`);
+          const portfolios = portfolioRes.data?.data || [];
+          const completedPortfolios = portfolios.filter((p: any) => {
+            const contestStatus = typeof p.contest === 'object' && p.contest?.status;
+            return contestStatus === 'completed';
+          });
+          if (completedPortfolios.length > 0) {
+            hasCompleted = true;
+          }
+        } catch (portfolioErr) {
+          console.error("Error checking completed contests from portfolios:", portfolioErr);
+        }
+      }
+      
+      if (hasCompleted) {
+        available.push('completed');
+      }
+    } catch (err) {
+      console.error("Error checking completed contests:", err);
+    }
+    
+    setAvailableStatusTabs(available.length > 0 ? available : ['upcoming']); // Default to upcoming if none
+    // Set initial filter to first available tab
+    if (available.length > 0 && !available.includes(statusFilter)) {
+      setStatusFilter(available[0]);
+    }
+  };
+
   useEffect(() => {
     fetchMatches();
+    checkAvailableStatusTabs();
   }, []);
 
  async function fetchMatches() {
@@ -122,6 +192,7 @@ function normalizeContestApiData(apiData :any[]) {
         : null,
       status: c.status || 'upcoming',
       isJoined: c.isJoined || false,
+      isLocked: c.isLocked || false, // Contest is locked (can't join)
     };
   });
 }
@@ -130,26 +201,62 @@ function normalizeContestApiData(apiData :any[]) {
 async function fetchContestsForMatch(matchId:any) {
   setLoadingContests(true);
   try {
-    // For completed, fetch from user profile/portfolios
+    // For completed, fetch from user profile contestHistory OR my-portfolios
     if (statusFilter === 'completed') {
       try {
-        await fetchProfile();
-        const portfolioRes = await axios.get(`${API_BASE_URL}/api/portfolios/my-portfolios`);
-        const portfolios = portfolioRes.data?.data || [];
-        const completedContests = portfolios
-          .filter((p: any) => {
-            const contestStatus = typeof p.contest === 'object' && p.contest?.status;
-            return contestStatus === 'completed';
-          })
-          .map((p: any) => {
-            const contest = typeof p.contest === 'object' ? p.contest : {};
-            return {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          setNiftyData([]);
+          setLoadingContests(false);
+          return;
+        }
+        
+        let completedContests: any[] = [];
+        
+        // Try getProfile first
+        try {
+          const profileResponse = await axiosInstance.get(`/api/auth/getprofile`);
+          const contestHistory = profileResponse.data?.profile?.contestHistory || [];
+          if (contestHistory.length > 0) {
+            completedContests = contestHistory.map((contest: any) => ({
               ...contest,
-              _id: typeof p.contest === 'object' ? contest._id : p.contest,
+              _id: contest._id || contest.contestId,
               isJoined: true,
+              status: 'completed',
+              isLocked: true,
               participants: [],
-            };
-          });
+            }));
+          }
+        } catch (profileErr) {
+          console.warn("Failed to fetch from getProfile, trying my-portfolios:", profileErr);
+        }
+        
+        // Fallback to my-portfolios if getProfile didn't return data
+        if (completedContests.length === 0) {
+          try {
+            const portfolioRes = await axiosInstance.get(`/api/portfolios/my-portfolios`);
+            const portfolios = portfolioRes.data?.data || [];
+            completedContests = portfolios
+              .filter((p: any) => {
+                const contestStatus = typeof p.contest === 'object' && p.contest?.status;
+                return contestStatus === 'completed';
+              })
+              .map((p: any) => {
+                const contest = typeof p.contest === 'object' ? p.contest : {};
+                return {
+                  ...contest,
+                  _id: typeof p.contest === 'object' ? contest._id : p.contest,
+                  isJoined: true,
+                  status: 'completed',
+                  isLocked: true,
+                  participants: [],
+                };
+              });
+          } catch (portfolioErr) {
+            console.error("Failed to fetch from my-portfolios:", portfolioErr);
+          }
+        }
+        
         setNiftyData(normalizeContestApiData(completedContests));
       } catch (err) {
         console.error("Failed to fetch completed contests:", err);
@@ -160,23 +267,33 @@ async function fetchContestsForMatch(matchId:any) {
       return;
     }
     
-    // For upcoming/live: use status filter endpoint (all-time, no matchId)
-    let url = `${API_BASE_URL}/api/match-contests/admin/`;
-    const params = new URLSearchParams();
-    
-    if (statusFilter === 'upcoming' || statusFilter === 'live') {
-      url = `${API_BASE_URL}/api/match-contests/status`;
-      params.append('statusFilter', statusFilter);
-      // Don't add matchId - status endpoint shows all-time contests
-    } else if (matchId) {
-      // For other status filters or default, use matchId if provided
-      params.append('matchId', matchId);
+    // For upcoming: use status filter endpoint
+    if (statusFilter === 'upcoming') {
+      const url = `${API_BASE_URL}/api/match-contests/status?statusFilter=upcoming`;
+      const res = await axios.get(url);
+      const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
+      setNiftyData(normalizeContestApiData(raw));
     }
-    const queryString = params.toString();
-    const fullUrl = queryString ? `${url}?${queryString}` : url;
-    const res = await axios.get(fullUrl);
-    const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
-    setNiftyData(normalizeContestApiData(raw));
+    // For live: use status filter endpoint
+    else if (statusFilter === 'live') {
+      const url = `${API_BASE_URL}/api/match-contests/status?statusFilter=live`;
+      const res = await axios.get(url);
+      const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
+      setNiftyData(normalizeContestApiData(raw));
+    }
+    // For other cases: use admin endpoint with matchId if provided
+    else {
+      let url = `${API_BASE_URL}/api/match-contests/admin/`;
+      const params = new URLSearchParams();
+      if (matchId) {
+        params.append('matchId', matchId);
+      }
+      const queryString = params.toString();
+      const fullUrl = queryString ? `${url}?${queryString}` : url;
+      const res = await axios.get(fullUrl);
+      const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
+      setNiftyData(normalizeContestApiData(raw));
+    }
   } catch (err) {
     console.error("fetchContestsForMatch error:", err);
     setNiftyData([]);
@@ -243,34 +360,38 @@ async function fetchContestsForMatch(matchId:any) {
             <Header />
             <BannerCarousel />
             
-            {/* Status Filter Tabs */}
-            <View className="flex-row bg-white border-b border-gray-200">
-              {[
-                { key: 'upcoming', label: 'Upcoming' },
-                { key: 'live', label: 'Live' },
-                { key: 'completed', label: 'Completed' },
-              ].map((status) => (
-                <TouchableOpacity
-                  key={status.key}
-                  className={`flex-1 py-3 items-center border-b-2 ${
-                    statusFilter === status.key
-                      ? 'border-red-500'
-                      : 'border-transparent'
-                  }`}
-                  onPress={() => setStatusFilter(status.key as typeof statusFilter)}
-                >
-                  <Text
-                    className={`text-sm font-semibold ${
-                      statusFilter === status.key
-                        ? 'text-red-500'
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    {status.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {/* Status Filter Tabs - Only show if data available */}
+            {availableStatusTabs.length > 0 && (
+              <View className="flex-row bg-white border-b border-gray-200">
+                {[
+                  { key: 'upcoming', label: 'Upcoming' },
+                  { key: 'live', label: 'Live' },
+                  { key: 'completed', label: 'Completed' },
+                ]
+                  .filter((status) => availableStatusTabs.includes(status.key as typeof statusFilter))
+                  .map((status) => (
+                    <TouchableOpacity
+                      key={status.key}
+                      className={`flex-1 py-3 items-center border-b-2 ${
+                        statusFilter === status.key
+                          ? 'border-red-500'
+                          : 'border-transparent'
+                      }`}
+                      onPress={() => setStatusFilter(status.key as typeof statusFilter)}
+                    >
+                      <Text
+                        className={`text-sm font-semibold ${
+                          statusFilter === status.key
+                            ? 'text-red-500'
+                            : 'text-gray-600'
+                        }`}
+                      >
+                        {status.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+              </View>
+            )}
 
             {/* Match Tabs */}
             <SegmentedTabs

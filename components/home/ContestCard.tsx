@@ -18,6 +18,7 @@ export interface Contest {
   medalPrize?: number; // e.g., 25000
   status?: string; // e.g., "upcoming", "live", "completed"
   isJoined?: boolean; // Whether user has joined this contest
+  isLocked?: boolean; // Whether contest is locked (can't join)
 }
 
 const currency = (n: number) => `₹${n?.toLocaleString("en-IN")}`;
@@ -68,23 +69,27 @@ const percent = Math.min(
         </Text>
       </View>
 
-      {/* Join button */}
+      {/* Join button - Only show Join for upcoming, non-locked contests */}
       <View className="px-4 py-2">
         <PrimaryButton
           title={
-            data?.status === 'completed' || data?.isJoined
+            data?.status === 'completed' || data?.isJoined || data?.status === 'live' || data?.isLocked
               ? 'View Details'
               : `Join ₹${data?.entryFee}`
           }
           onPress={() => {
-            if (data?.status === 'completed' || data?.isJoined) {
-              // Route to contest detail page for completed/joined contests
-              router.push(`/my-contest/${data?.id}`);
-            } else {
-              // Route to create portfolio for upcoming/live contests
+            // Only allow joining if contest is upcoming, not locked, and user hasn't joined
+            const canJoin = data?.status === 'upcoming' && !data?.isLocked && !data?.isJoined;
+            
+            if (canJoin) {
+              // Route to create portfolio for upcoming contests
               router.push(`/create-portfolio?contestId=${data?.id}`);
+            } else {
+              // Route to contest detail page for completed/joined/live/locked contests
+              router.push(`/my-contest/${data?.id}`);
             }
           }}
+          disabled={data?.status === 'live' && data?.isLocked}
         />
       </View>
 

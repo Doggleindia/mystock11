@@ -43,8 +43,12 @@ export default function ContestDetailScreen() {
     try {
       const response = await fetchMyPortfolios();
       setPortfolios(response?.data ?? []);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load contest portfolios", error);
+      // If 403, token might be missing or expired
+      if (error?.response?.status === 403) {
+        console.error("Authentication failed - token may be missing or expired");
+      }
     } finally {
       setLoading(false);
     }
