@@ -4,12 +4,15 @@ import FilterBar from "@/components/home/FilterBar";
 import Header from "@/components/home/Header";
 import SegmentedTabs from "@/components/home/SegmentedTabs";
 import { API_BASE_URL } from "@/services/config";
+import { useAuthStore } from "@/store/authStore";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    View
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -21,9 +24,11 @@ type FilterRange = {
 };
 
 export default function Home() {
+  const [statusFilter, setStatusFilter] = useState<"upcoming" | "live" | "completed">("upcoming");
   const [tabs, setTabs] = useState<Array<{ key: string, label: string }>>([]);
-const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
+  const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
   const [sort, setSort] = useState<"recommended" | "popular">("recommended");
+  const { user, fetchProfile } = useAuthStore();
   const [filters, setFilters] = useState<{
     entryRange: FilterRange | null;
     maxEntryRange: FilterRange | null;
@@ -59,59 +64,126 @@ const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
     const json = await res.json();
     const matches = json.data ?? [];
     // Store tabs: key = id, label = title
-    const newTabs = matches.map(m => ({ key: m._id, label: m.title }));
+    const newTabs = matches.map((m: any) => ({ key: m._id, label: m.title }));
     setTabs(newTabs);
-    setSelectedTabKey(newTabs.length ? newTabs[0].key : null);
-    setMatches(matches); // optional: store whole match objects if needed
+    // Only auto-select first match if not viewing completed contests
+    if (statusFilter !== 'completed' && newTabs.length) {
+      setSelectedTabKey(newTabs[0].key);
+    }
+    setMatches(matches);
   } finally {
     setLoadingMatches(false);
   }
 }
  useEffect(() => {
-  if (selectedTabKey) {
-    fetchContestsForMatch(selectedTabKey);
+  // Always fetch when status filter changes, or when match is selected
+  // For upcoming/live: fetch all contests (don't pass matchId to status endpoint)
+  // For completed: fetch from user portfolios
+  // For other cases: use matchId if selected
+  if (statusFilter === 'completed' || statusFilter === 'upcoming' || statusFilter === 'live' || selectedTabKey) {
+    // Don't pass matchId when using status filter (upcoming/live show all-time)
+    const matchIdForFetch = (statusFilter === 'upcoming' || statusFilter === 'live') ? null : selectedTabKey;
+    fetchContestsForMatch(matchIdForFetch);
   }
-}, [selectedTabKey,sort]);
+}, [selectedTabKey, sort, statusFilter]);
 
 function normalizeContestApiData(apiData :any[]) {
   // Handle empty or unexpected cases gracefully
   if (!Array.isArray(apiData)) return [];
 
-  return apiData.map(c => ({
-    id: c._id || '',                              // Unique contest ID
-    title: c.name || 'Contest',                   // Name for card
-    prizePool: c.pricePool || 0,                  // Pool amount
-    entryFee: c.entryFee || 0,                    // Entry fee
-    timeLeft: '',                                 // Optionally calculate from startTime
-    startTime: c.startTime                         // Can format if needed
-        ? new Date(c.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return apiData.map(c => {
+    const startTime = c.startTime ? new Date(c.startTime) : null;
+    const endTime = c.endTime ? new Date(c.endTime) : null;
+    const now = new Date();
+    
+    // Calculate time left for upcoming contests
+    let timeLeft = '';
+    if (statusFilter === 'upcoming' && startTime && startTime > now) {
+      const diff = startTime.getTime() - now.getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      timeLeft = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+    }
+
+    return {
+      id: c._id || '',
+      title: c.name || 'Contest',
+      prizePool: c.pricePool || 0,
+      entryFee: c.entryFee || 0,
+      timeLeft,
+      startTime: startTime
+        ? startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '',
-    spotsFilled: Array.isArray(c.participants) ? c.participants.length : 0,
-    totalSpots: c.totalSpots || 0,
-    winRate: null,                                // Compute/leave null if not given
-    medalPrize: c.prizeDistribution?.length
-      ? c.prizeDistribution[0].prizeAmount
-      : null,
-    // Add any extra UI fields as needed
-  }));
+      spotsFilled: c.totalJoined || (Array.isArray(c.participants) ? c.participants.length : 0),
+      totalSpots: c.totalSpots || 0,
+      winRate: undefined,
+      medalPrize: c.prizeDistribution?.length
+        ? c.prizeDistribution[0].prizeAmount
+        : null,
+      status: c.status || 'upcoming',
+      isJoined: c.isJoined || false,
+    };
+  });
 }
 
 
 async function fetchContestsForMatch(matchId:any) {
   setLoadingContests(true);
   try {
-    const res = await axios.get(`${API_BASE_URL}/api/match-contests/admin/?${matchId}sort=${sort}`);
-    // Your API might return {data: [...]}, {contests: [...]}, or just an array
+    // For completed, fetch from user profile/portfolios
+    if (statusFilter === 'completed') {
+      try {
+        await fetchProfile();
+        const portfolioRes = await axios.get(`${API_BASE_URL}/api/portfolios/my-portfolios`);
+        const portfolios = portfolioRes.data?.data || [];
+        const completedContests = portfolios
+          .filter((p: any) => {
+            const contestStatus = typeof p.contest === 'object' && p.contest?.status;
+            return contestStatus === 'completed';
+          })
+          .map((p: any) => {
+            const contest = typeof p.contest === 'object' ? p.contest : {};
+            return {
+              ...contest,
+              _id: typeof p.contest === 'object' ? contest._id : p.contest,
+              isJoined: true,
+              participants: [],
+            };
+          });
+        setNiftyData(normalizeContestApiData(completedContests));
+      } catch (err) {
+        console.error("Failed to fetch completed contests:", err);
+        setNiftyData([]);
+      } finally {
+        setLoadingContests(false);
+      }
+      return;
+    }
+    
+    // For upcoming/live: use status filter endpoint (all-time, no matchId)
+    let url = `${API_BASE_URL}/api/match-contests/admin/`;
+    const params = new URLSearchParams();
+    
+    if (statusFilter === 'upcoming' || statusFilter === 'live') {
+      url = `${API_BASE_URL}/api/match-contests/status`;
+      params.append('statusFilter', statusFilter);
+      // Don't add matchId - status endpoint shows all-time contests
+    } else if (matchId) {
+      // For other status filters or default, use matchId if provided
+      params.append('matchId', matchId);
+    }
+    const queryString = params.toString();
+    const fullUrl = queryString ? `${url}?${queryString}` : url;
+    const res = await axios.get(fullUrl);
     const raw = res.data?.data ?? res.data?.contests ?? res.data ?? [];
     setNiftyData(normalizeContestApiData(raw));
   } catch (err) {
     console.error("fetchContestsForMatch error:", err);
-    setNiftyData([]); // Set empty array on error to avoid UI crash
+    setNiftyData([]);
   } finally {
     setLoadingContests(false);
   }
 }
-
 
   const filterContests = (contests: Contest[]) => {
     return contests.filter((contest) => {
@@ -170,15 +242,42 @@ async function fetchContestsForMatch(matchId:any) {
           <View>
             <Header />
             <BannerCarousel />
-           <SegmentedTabs
-  tabs={tabs}
-  value={selectedTabKey}
-  onChange={setSelectedTabKey}
-/>
+            
+            {/* Status Filter Tabs */}
+            <View className="flex-row bg-white border-b border-gray-200">
+              {[
+                { key: 'upcoming', label: 'Upcoming' },
+                { key: 'live', label: 'Live' },
+                { key: 'completed', label: 'Completed' },
+              ].map((status) => (
+                <TouchableOpacity
+                  key={status.key}
+                  className={`flex-1 py-3 items-center border-b-2 ${
+                    statusFilter === status.key
+                      ? 'border-red-500'
+                      : 'border-transparent'
+                  }`}
+                  onPress={() => setStatusFilter(status.key as typeof statusFilter)}
+                >
+                  <Text
+                    className={`text-sm font-semibold ${
+                      statusFilter === status.key
+                        ? 'text-red-500'
+                        : 'text-gray-600'
+                    }`}
+                  >
+                    {status.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-
-            {/* Matches list */}
-          
+            {/* Match Tabs */}
+            <SegmentedTabs
+              tabs={tabs}
+              value={selectedTabKey}
+              onChange={setSelectedTabKey}
+            />
 
             <FilterBar
               sort={sort}
@@ -189,6 +288,7 @@ async function fetchContestsForMatch(matchId:any) {
                   maxEntryRange: newFilters.maxEntryRange,
                   prizePoolRange: newFilters.prizePoolRange,
                   spotsRange: newFilters.spotsRange,
+                  category: null,
                 });
               }}
               onClearFilters={() => setFilters({
@@ -196,6 +296,7 @@ async function fetchContestsForMatch(matchId:any) {
                 maxEntryRange: null,
                 prizePoolRange: null,
                 spotsRange: null,
+                category: null,
               })}
             />
             {loadingContests && (

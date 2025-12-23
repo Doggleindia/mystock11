@@ -16,6 +16,8 @@ export interface Contest {
   totalSpots: number; // e.g., 250
   winRate?: number; // e.g., 40
   medalPrize?: number; // e.g., 25000
+  status?: string; // e.g., "upcoming", "live", "completed"
+  isJoined?: boolean; // Whether user has joined this contest
 }
 
 const currency = (n: number) => `₹${n?.toLocaleString("en-IN")}`;
@@ -69,8 +71,20 @@ const percent = Math.min(
       {/* Join button */}
       <View className="px-4 py-2">
         <PrimaryButton
-          title={`Join ₹${data?.entryFee}`}
-          onPress={() => router.push(`/contest/${data?.id}`)}
+          title={
+            data?.status === 'completed' || data?.isJoined
+              ? 'View Details'
+              : `Join ₹${data?.entryFee}`
+          }
+          onPress={() => {
+            if (data?.status === 'completed' || data?.isJoined) {
+              // Route to contest detail page for completed/joined contests
+              router.push(`/my-contest/${data?.id}`);
+            } else {
+              // Route to create portfolio for upcoming/live contests
+              router.push(`/create-portfolio?contestId=${data?.id}`);
+            }
+          }}
         />
       </View>
 
