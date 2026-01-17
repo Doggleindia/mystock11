@@ -1,16 +1,21 @@
 import MyPortfolio from "@/components/my-contest/MyPortfolio";
-import WinnerTab from "@/components/my-contest/WinnerTab";
 import Header from "@/components/wallet/BallanceHeader";
+import axiosInstance from "@/services/axiosInstance";
 import {
     fetchMyPortfolios,
+    fetchPortfolioById,
+    PortfolioDetailResponse,
     PortfolioRecord,
 } from "@/services/portfolioService";
 import usePortfolioStore from "@/store/portfolioStore";
-import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Stack, useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
+    Modal,
+    Pressable,
     ScrollView,
     Text,
     TouchableOpacity,
@@ -28,16 +33,90 @@ const percentage = (n?: number | null) =>
     ? `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`
     : "0.00%";
 
+interface ContestDetailData {
+  _id: string;
+  name: string;
+  category?: string;
+  entryFee: number;
+  pricePool: number;
+  totalSpots: number;
+  status: string;
+  startTime: string;
+  endTime: string;
+  isLocked?: boolean;
+  prizeDistribution?: Array<{ rankFrom: number; rankTo: number; prizeAmount: number }>;
+  leaderboard?: Array<{
+    user: {
+      _id: string;
+      email?: string;
+    };
+    portfolio: string;
+    rank: number;
+    pnl?: number;
+    pnlPercentage?: number;
+  }>;
+  participants?: Array<{
+    user: {
+      _id: string;
+      email?: string;
+    };
+    portfolio: {
+      _id: string;
+    };
+  }>;
+}
+
 export default function ContestDetailScreen() {
   const { contestId } = useLocalSearchParams<{ contestId: string }>();
   const { lastJoinedContest } = usePortfolioStore();
   const [tab, setTab] = useState<"My Portfolio" | "Winner">("My Portfolio");
   const [portfolios, setPortfolios] = useState<PortfolioRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(
-    null
+  const [contestLoading, setContestLoading] = useState(false);
+  const [contestData, setContestData] = useState<ContestDetailData | null>(null);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState<string | null>(null);
+  const [viewingPortfolio, setViewingPortfolio] = useState<PortfolioDetailResponse["data"] | null>(null);
+  const [portfolioModalVisible, setPortfolioModalVisible] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Get current user ID
+  useFocusEffect(
+    useCallback(() => {
+      const getCurrentUserId = async () => {
+        try {
+          const profileRes = await axiosInstance.get("/api/auth/getprofile");
+          const userId = profileRes.data?.profile?.user?._id;
+          setCurrentUserId(userId || null);
+        } catch (err) {
+          console.error("Failed to get user ID:", err);
+        }
+      };
+      getCurrentUserId();
+    }, [])
   );
 
+  // Fetch contest details
+  const loadContestDetails = useCallback(async () => {
+    if (!contestId) return;
+    
+    setContestLoading(true);
+    try {
+      const response = await axiosInstance.get(
+        `/api/match-contests/admin/${contestId}`
+      );
+      setContestData(response.data?.data || null);
+    } catch (error: any) {
+      console.error("Failed to load contest details", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Failed to load contest details"
+      );
+    } finally {
+      setContestLoading(false);
+    }
+  }, [contestId]);
+
+  // Load portfolios
   const loadPortfolios = useCallback(async () => {
     setLoading(true);
     try {
@@ -45,10 +124,6 @@ export default function ContestDetailScreen() {
       setPortfolios(response?.data ?? []);
     } catch (error: any) {
       console.error("Failed to load contest portfolios", error);
-      // If 403, token might be missing or expired
-      if (error?.response?.status === 403) {
-        console.error("Authentication failed - token may be missing or expired");
-      }
     } finally {
       setLoading(false);
     }
@@ -56,10 +131,12 @@ export default function ContestDetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      loadContestDetails();
       loadPortfolios();
-    }, [loadPortfolios])
+    }, [loadContestDetails, loadPortfolios])
   );
 
+  // Filter portfolios for this contest
   const contestPortfolios = useMemo(() => {
     const allPortfolios = portfolios.length
       ? portfolios
@@ -76,12 +153,13 @@ export default function ContestDetailScreen() {
     });
   }, [contestId, portfolios, lastJoinedContest]);
 
-  const contestInfo =
+  const contestInfo = contestData || (
     contestPortfolios[0] &&
     typeof contestPortfolios[0].contest === "object" &&
     contestPortfolios[0].contest !== null
       ? contestPortfolios[0].contest
-      : undefined;
+      : undefined
+  );
 
   const selectedPortfolio =
     contestPortfolios.find((p) => p._id === selectedPortfolioId) ||
@@ -91,8 +169,45 @@ export default function ContestDetailScreen() {
     setSelectedPortfolioId(portfolioId);
   };
 
+  // Handle viewing portfolio from leaderboard
+  const handleViewPortfolio = async (portfolioId: string, userId: string) => {
+    // Check if contest is upcoming and user is not the owner
+    const isUpcoming = contestData?.status === "upcoming";
+    const isOtherUser = userId !== currentUserId;
+    
+    if (isUpcoming && isOtherUser) {
+      Alert.alert(
+        "Portfolio Locked",
+        "This portfolio is locked until the contest starts."
+      );
+      return;
+    }
+
+    try {
+      const response = await fetchPortfolioById(portfolioId);
+      if (response.data) {
+        setViewingPortfolio(response.data);
+        setPortfolioModalVisible(true);
+      }
+    } catch (error: any) {
+      console.error("Failed to load portfolio:", error);
+      Alert.alert(
+        "Error",
+        error?.response?.data?.message || "Failed to load portfolio details"
+      );
+    }
+  };
+
   const renderTabContent = () => {
-    if (!contestPortfolios.length && !loading) {
+    if (contestLoading || loading) {
+      return (
+        <View className="py-6 items-center">
+          <ActivityIndicator size="large" color="#ef4444" />
+        </View>
+      );
+    }
+
+    if (!contestPortfolios.length && !loading && tab === "My Portfolio") {
       return (
         <View className="bg-white rounded-xl p-6 items-center mt-4">
           <Text className="text-gray-500">
@@ -129,7 +244,7 @@ export default function ContestDetailScreen() {
                         : "text-gray-700"
                     }`}
                   >
-                    Portfolio {portfolio.team?.length ?? 0}/11
+                    Portfolio {(Array.isArray(portfolio.team) ? portfolio.team.length : 0)}/11
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -141,132 +256,229 @@ export default function ContestDetailScreen() {
       );
     }
 
-    // Winner tab – use leaderboard data from contest snapshot if available
-    const winnersFromApi =
-      Array.isArray((contestInfo as any)?.leaderboard) &&
-      (contestInfo as any).leaderboard.length
-        ? (contestInfo as any).leaderboard.map((row: any, index: number) => ({
-            id: row._id || String(index + 1),
-            name: row.userName || `Rank ${row.rank ?? index + 1}`,
-            portfolio: `Rank ${row.rank ?? index + 1}`,
-            prize:
-              typeof row.prizeAmount === "number"
-                ? `₹${row.prizeAmount.toLocaleString("en-IN")}`
-                : "-",
-            pool:
-              typeof contestInfo?.pricePool === "number"
-                ? `₹${contestInfo.pricePool.toLocaleString("en-IN")}`
-                : "-",
-            image:
-              row.avatarUrl ||
-              "https://ui-avatars.com/api/?name=W&background=0D8ABC&color=fff",
-          }))
-        : [];
+    // Winner tab - show leaderboard
+    if (tab === "Winner") {
+      const leaderboard = contestData?.leaderboard || [];
+      const isUpcoming = contestData?.status === "upcoming";
 
-    return <WinnerTab winners={winnersFromApi} />;
+      if (leaderboard.length === 0) {
+        return (
+          <View className="bg-white rounded-xl p-6 items-center mt-4">
+            <Text className="text-gray-500">
+              Leaderboard will be available once the contest starts.
+            </Text>
+          </View>
+        );
+      }
+
+      return (
+        <View className="bg-white rounded-xl shadow-sm p-4 mb-4">
+          <Text className="text-gray-700 font-semibold mb-3">
+            Top performers in this contest
+          </Text>
+
+          {leaderboard.map((entry, index) => {
+            const isUserPortfolio = entry.user._id === currentUserId;
+            const canView = !isUpcoming || isUserPortfolio;
+
+            return (
+              <TouchableOpacity
+                key={entry.portfolio || index}
+                className={`flex-row justify-between items-center py-3 border-b border-gray-200 ${
+                  !canView ? "opacity-60" : ""
+                }`}
+                onPress={() => {
+                  if (canView && entry.portfolio) {
+                    handleViewPortfolio(entry.portfolio, entry.user._id);
+                  } else if (!canView) {
+                    Alert.alert(
+                      "Portfolio Locked",
+                      "This portfolio is locked until the contest starts."
+                    );
+                  }
+                }}
+                disabled={!canView}
+              >
+                <View className="flex-row items-center flex-1">
+                  <View className="w-8 h-8 bg-red-100 rounded-full items-center justify-center mr-3">
+                    <Text className="text-red-600 font-bold text-xs">
+                      #{entry.rank}
+                    </Text>
+                  </View>
+                  <View>
+                    <Text className="font-semibold text-gray-800">
+                      {entry.user.email?.split("@")[0] || `User ${entry.rank}`}
+                    </Text>
+                    <Text className="text-gray-500 text-xs">
+                      {canView ? "Tap to view portfolio" : "Locked"}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="items-end">
+                  <Text
+                    className={`font-bold text-sm ${
+                      (entry.pnlPercentage || 0) >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {percentage(entry.pnlPercentage)}
+                  </Text>
+                  <Text className="text-gray-400 text-xs">
+                    {currency(entry.pnl)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      );
+    }
+
+    return null;
   };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
+      <SafeAreaView style={{ flex: 1 }} edges={["left", "right", "bottom"]}>
         <View className="flex-1 bg-gray-50">
-        <Header title={contestInfo?.name || "Contest Details"} />
+          <Header title={contestData?.name || contestInfo?.name || "Contest Details"} />
 
-        <View className="bg-white rounded-xl p-4 shadow-sm mb-4 mx-2 mt-3">
-          <View className="flex-row justify-between items-start mb-3">
-            <View>
-              <Text className="text-gray-500 text-xs uppercase">
-                Contest joined
-              </Text>
-              <Text className="text-2xl font-semibold text-green-600 mt-1">
-                {percentage(selectedPortfolio?.pnlPercentage)}
-              </Text>
-              <Text className="text-sm text-gray-500 mt-1">
-                {contestPortfolios.length} Portfolio
-                {contestPortfolios.length === 1 ? "" : "s"}
+          {/* Contest Info Card */}
+          <View className="bg-white rounded-xl p-4 shadow-sm mb-4 mx-2 mt-3">
+            <View className="flex-row justify-between items-start mb-3">
+              <View>
+                <Text className="text-gray-500 text-xs uppercase">
+                  {contestData?.status === "live" ? "Live Contest" : 
+                   contestData?.status === "completed" ? "Completed Contest" :
+                   "Contest Joined"}
+                </Text>
+                {selectedPortfolio && (
+                  <>
+                    <Text
+                      className={`text-2xl font-semibold mt-1 ${
+                        (selectedPortfolio.pnlPercentage || 0) >= 0
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {percentage(selectedPortfolio?.pnlPercentage)}
+                    </Text>
+                    <Text className="text-sm text-gray-500 mt-1">
+                      {contestPortfolios.length} Portfolio
+                      {contestPortfolios.length === 1 ? "" : "s"}
+                    </Text>
+                  </>
+                )}
+              </View>
+              <Text className="text-3xl">
+                {contestData?.status === "live" ? "🔥" : 
+                 contestData?.status === "completed" ? "🏆" : "📈"}
               </Text>
             </View>
-            <Text className="text-3xl">📈</Text>
-          </View>
 
-          <View className="space-y-2">
-            <View className="flex-row justify-between">
-              <View className="flex-row items-center">
-                <Ionicons name="trophy-outline" size={16} color="#6b7280" />
-                <Text className="ml-2 text-gray-600">Prize Pool</Text>
+            <View className="space-y-2">
+              <View className="flex-row justify-between">
+                <View className="flex-row items-center">
+                  <Ionicons name="trophy-outline" size={16} color="#6b7280" />
+                  <Text className="ml-2 text-gray-600">Prize Pool</Text>
+                </View>
+                <Text className="font-semibold">
+                  {currency((contestData?.pricePool ?? contestInfo?.pricePool) ?? 0)}
+                </Text>
               </View>
-              <Text className="font-semibold">{currency(contestInfo?.pricePool)}</Text>
-            </View>
-            <View className="flex-row justify-between">
-              <View className="flex-row items-center">
-                <MaterialIcons name="currency-rupee" size={16} color="#6b7280" />
-                <Text className="ml-2 text-gray-600">Entry Fee</Text>
+              <View className="flex-row justify-between">
+                <View className="flex-row items-center">
+                  <MaterialIcons name="currency-rupee" size={16} color="#6b7280" />
+                  <Text className="ml-2 text-gray-600">Entry Fee</Text>
+                </View>
+                <Text className="font-semibold">
+                  {currency(contestData?.entryFee || contestInfo?.entryFee)}
+                </Text>
               </View>
-              <Text className="font-semibold">{currency(contestInfo?.entryFee)}</Text>
-            </View>
-            <View className="flex-row justify-between">
-              <View className="flex-row items-center">
-                <Ionicons name="people-outline" size={16} color="#6b7280" />
-                <Text className="ml-2 text-gray-600">Total Spots</Text>
+              <View className="flex-row justify-between">
+                <View className="flex-row items-center">
+                  <Ionicons name="people-outline" size={16} color="#6b7280" />
+                  <Text className="ml-2 text-gray-600">Total Spots</Text>
+                </View>
+                <Text className="font-semibold">
+                  {(contestData?.totalSpots ?? contestInfo?.totalSpots) ?? "—"}
+                </Text>
               </View>
-              <Text className="font-semibold">
-                {contestInfo?.totalSpots ?? "—"}
-              </Text>
-            </View>
-            <View className="flex-row justify-between">
-              <View className="flex-row items-center">
-                <FontAwesome5 name="flag" size={14} color="#6b7280" />
-                <Text className="ml-2 text-gray-600">Max Entry</Text>
-              </View>
-              <Text className="font-semibold">
-                {contestInfo?.maxEntriesPerUser
-                  ? `${contestInfo.maxEntriesPerUser} Times`
-                  : contestInfo?.category === "Head-to-Head"
-                  ? "1 Time"
-                  : "Unlimited"}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View className="flex-row border-b border-gray-200 bg-white">
-          {["My Portfolio", "Winner"].map((item) => (
-            <TouchableOpacity
-              key={item}
-              className="flex-1 items-center py-3"
-              onPress={() => setTab(item as "My Portfolio" | "Winner")}
-            >
-              <Text
-                className={`text-sm font-semibold ${
-                  tab === item ? "text-red-600" : "text-gray-600"
-                }`}
-              >
-                {item}
-              </Text>
-              {tab === item && (
-                <View className="h-0.5 w-full bg-red-600 absolute bottom-0" />
+              {contestData?.status && (
+                <View className="flex-row justify-between">
+                  <View className="flex-row items-center">
+                    <Ionicons name="time-outline" size={16} color="#6b7280" />
+                    <Text className="ml-2 text-gray-600">Status</Text>
+                  </View>
+                  <Text className="font-semibold capitalize">
+                    {contestData.status}
+                  </Text>
+                </View>
               )}
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <ScrollView
-          className="p-2"
-          contentContainerStyle={{ paddingBottom: 80 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {loading ? (
-            <View className="py-6">
-              <ActivityIndicator />
             </View>
-          ) : (
-            renderTabContent()
-          )}
-        </ScrollView>
+          </View>
+
+          {/* Tabs */}
+          <View className="flex-row border-b border-gray-200 bg-white">
+            {["My Portfolio", "Winner"].map((item) => (
+              <TouchableOpacity
+                key={item}
+                className="flex-1 items-center py-3"
+                onPress={() => setTab(item as "My Portfolio" | "Winner")}
+              >
+                <Text
+                  className={`text-sm font-semibold ${
+                    tab === item ? "text-red-600" : "text-gray-600"
+                  }`}
+                >
+                  {item}
+                </Text>
+                {tab === item && (
+                  <View className="h-0.5 w-full bg-red-600 absolute bottom-0" />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Content */}
+          <ScrollView
+            className="p-2"
+            contentContainerStyle={{ paddingBottom: 80 }}
+            showsVerticalScrollIndicator={false}
+          >
+            {renderTabContent()}
+          </ScrollView>
         </View>
       </SafeAreaView>
+
+      {/* Portfolio Modal */}
+      <Modal
+        visible={portfolioModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setPortfolioModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/50 justify-end">
+          <View className="bg-white rounded-t-3xl max-h-[90%]">
+            <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+              <Text className="text-lg font-semibold">Portfolio Details</Text>
+              <Pressable onPress={() => setPortfolioModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#6b7280" />
+              </Pressable>
+            </View>
+            <ScrollView className="p-4">
+              {viewingPortfolio && (
+                <MyPortfolio
+                  portfolio={viewingPortfolio as unknown as PortfolioRecord}
+                />
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
-

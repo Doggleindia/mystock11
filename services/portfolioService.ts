@@ -107,4 +107,60 @@ export const fetchMyPortfolios = async () => {
   return response.data as MyPortfoliosResponse;
 };
 
+export interface PortfolioDetailResponse {
+  status?: string;
+  data?: {
+    _id: string;
+    user: {
+      _id: string;
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+    };
+    contest: {
+      _id: string;
+      name: string;
+      pricePool?: number;
+      status: string;
+      startTime: string;
+      endTime: string;
+    };
+    team: Array<{
+      stockSymbol: string;
+      companyName: string;
+      sector: string;
+      buyPrice: number;
+      currentPrice?: number;
+      quantity: number;
+      pnl?: number;
+      pnlPercentage?: number;
+      weight?: number;
+      isCaptain?: boolean;
+      isViceCaptain?: boolean;
+      _id: string;
+    }>;
+    captain?: string;
+    viceCaptain?: string;
+    initialBalance?: number;
+    currentBalance?: number;
+    pnl?: number;
+    pnlPercentage?: number;
+    totalValue?: number;
+    isLocked?: boolean;
+    isFinalized?: boolean;
+    isJoined?: boolean;
+    totalPoints?: number;
+    scoringDetails?: {
+      captainMultiplier?: number;
+      viceCaptainMultiplier?: number;
+      baseScoringMetric?: string;
+    };
+  };
+}
+
+export const fetchPortfolioById = async (portfolioId: string) => {
+  const response = await axiosInstance.get(`/api/portfolios/portfolio/${portfolioId}`);
+  return response.data as PortfolioDetailResponse;
+};
+
 

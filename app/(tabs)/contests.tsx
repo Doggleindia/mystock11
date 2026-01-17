@@ -1,328 +1,396 @@
-import MyPortfolio from "@/components/my-contest/MyPortfolio";
-import WinnerTab from "@/components/my-contest/WinnerTab";
-import Header from "@/components/wallet/BallanceHeader";
-import {
-  fetchMyPortfolios,
-  PortfolioRecord,
-} from "@/services/portfolioService";
-import usePortfolioStore from "@/store/portfolioStore";
-import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { router, Stack, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import ContestCard, { Contest } from "@/components/home/ContestCard";
+import Header from "@/components/home/Header";
+import SegmentedTabs from "@/components/home/SegmentedTabs";
+import axiosInstance from "@/services/axiosInstance";
+import { API_BASE_URL } from "@/services/config";
+import axios, { CancelTokenSource } from "axios";
+import { router, Stack } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Image,
-  ScrollView,
+  FlatList,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const formatCurrency = (value?: number | null) => {
-  if (typeof value !== "number" || Number.isNaN(value)) return "—";
-  return `₹${value.toLocaleString("en-IN", {
-    maximumFractionDigits: 2,
-  })}`;
-};
+type ContestTab = "live" | "completed";
 
-const formatPercentage = (value?: number | null) => {
-  if (typeof value !== "number" || Number.isNaN(value)) return "0.00%";
-  const formatted = value.toFixed(2);
-  return `${value >= 0 ? "+" : ""}${formatted}%`;
-};
+interface ContestApiData {
+  _id: string;
+  name: string;
+  category?: string;
+  entryFee: number;
+  pricePool: number;
+  totalSpots: number;
+  totalJoined?: number;
+  participants?: any[];
+  startTime: string;
+  endTime: string;
+  status: string;
+  isJoined?: boolean;
+  isLocked?: boolean;
+  prizeDistribution?: Array<{ prizeAmount: number }>;
+  leaderboard?: Array<{
+    userId: string;
+    portfolioId: string;
+    rank: number;
+    pnl?: number;
+    pnlPercentage?: number;
+  }>;
+}
 
-const CompletedContestScreen = () => {
-  const [tab, setTab] = useState("My Contest");
+export default function ContestsScreen() {
+  // Tab state
+  const [activeTab, setActiveTab] = useState<ContestTab>("live");
+  const [tabs, setTabs] = useState<Array<{ key: string; label: string }>>([]);
+  const [selectedTabKey, setSelectedTabKey] = useState<string | null>(null);
+
+  // Contest state
+  const [contests, setContests] = useState<Contest[]>([]);
   const [loading, setLoading] = useState(false);
-  const [portfolios, setPortfolios] = useState<PortfolioRecord[]>([]);
-  const { lastJoinedContest } = usePortfolioStore();
+  const [error, setError] = useState<string | null>(null);
 
-  const loadPortfolios = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetchMyPortfolios();
-      setPortfolios(response?.data ?? []);
-    } catch (error) {
-      console.error("Failed to load portfolios", error);
-    } finally {
-      setLoading(false);
-    }
+  // Match state
+  const [matches, setMatches] = useState<Array<{ id: string; name: string }>>([]);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+
+  // Cancel token for aborting requests
+  const cancelTokenRef = useRef<CancelTokenSource | null>(null);
+
+  // Fetch matches on mount
+  useEffect(() => {
+    fetchMatches();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadPortfolios();
-    }, [loadPortfolios])
+  // Fetch contests when tab or match changes
+  useEffect(() => {
+    if (selectedTabKey) {
+      fetchContests(activeTab, selectedTabKey);
+    }
+    // Cleanup: cancel previous request when tab or match changes
+    return () => {
+      if (cancelTokenRef.current) {
+        cancelTokenRef.current.cancel("Request cancelled due to tab/match change");
+      }
+    };
+  }, [activeTab, selectedTabKey]);
+
+  /**
+   * Fetch matches list
+   */
+  const fetchMatches = async () => {
+    setLoadingMatches(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/matches`);
+      const json = await res.json();
+      const matchesData = json.data ?? [];
+      const newTabs = matchesData.map((m: any) => ({
+        key: m._id,
+        label: m.title,
+      }));
+      setTabs(newTabs);
+      setMatches(matchesData);
+      // Auto-select first match
+      if (newTabs.length > 0 && !selectedTabKey) {
+        setSelectedTabKey(newTabs[0].key);
+      }
+    } catch (err) {
+      console.error("Error fetching matches:", err);
+    } finally {
+      setLoadingMatches(false);
+    }
+  };
+
+  /**
+   * Fetch contests based on active tab
+   */
+  const fetchContests = useCallback(
+    async (tab: ContestTab, matchId: string) => {
+      // Cancel previous request
+      if (cancelTokenRef.current) {
+        cancelTokenRef.current.cancel("New request initiated");
+      }
+
+      // Create new cancel token
+      const cancelToken = axios.CancelToken.source();
+      cancelTokenRef.current = cancelToken;
+
+      setLoading(true);
+      setError(null);
+      setContests([]);
+
+      try {
+        let response;
+        let rawData: ContestApiData[] = [];
+
+        if (tab === "completed") {
+          // GET /api/match-contests/contests/:matchId?type=completed
+          response = await axiosInstance.get(
+            `/api/match-contests/contests/${matchId}`,
+            {
+              params: { type: "completed" },
+              cancelToken: cancelToken.token,
+            }
+          );
+          rawData = response.data?.data ?? response.data ?? [];
+        } else if (tab === "live") {
+          // For live: fetch all and filter for live status
+          try {
+            response = await axiosInstance.get(
+              `/api/match-contests/admin/`,
+              {
+                params: { matchId },
+                cancelToken: cancelToken.token,
+              }
+            );
+            const allContests = response.data?.data ?? response.data ?? [];
+            const now = new Date();
+
+            // Filter for live contests: status === "live" OR time between startTime and endTime
+            rawData = allContests.filter((contest: ContestApiData) => {
+              if (contest.status === "live") return true;
+
+              const startTime = contest.startTime
+                ? new Date(contest.startTime)
+                : null;
+              const endTime = contest.endTime
+                ? new Date(contest.endTime)
+                : null;
+
+              if (startTime && endTime) {
+                return now >= startTime && now <= endTime;
+              }
+
+              return false;
+            });
+          } catch (err) {
+            // Fallback: try status filter endpoint
+            response = await axiosInstance.get(
+              `/api/match-contests/status`,
+              {
+                params: { statusFilter: "live" },
+                cancelToken: cancelToken.token,
+              }
+            );
+            rawData = response.data?.data ?? response.data ?? [];
+          }
+        }
+
+        // Normalize and set contests
+        const normalizedContests = normalizeContestData(rawData, tab);
+        setContests(normalizedContests);
+      } catch (err: any) {
+        if (axios.isCancel(err)) {
+          console.log("Request cancelled:", err.message);
+          return;
+        }
+        console.error(`Error fetching ${tab} contests:`, err);
+        setError(
+          err?.response?.data?.message ||
+            `Failed to load ${tab} contests. Please try again.`
+        );
+        setContests([]);
+      } finally {
+        setLoading(false);
+        cancelTokenRef.current = null;
+      }
+    },
+    []
   );
 
-  const portfolioSources = useMemo(() => {
-    if (portfolios.length) return portfolios;
-    if (lastJoinedContest?.portfolio) {
-      return [lastJoinedContest.portfolio as PortfolioRecord];
-    }
-    return [];
-  }, [portfolios, lastJoinedContest]);
+  /**
+   * Normalize contest API data to Contest interface
+   */
+  const normalizeContestData = (
+    apiData: ContestApiData[],
+    tab: ContestTab
+  ): Contest[] => {
+    if (!Array.isArray(apiData)) return [];
 
-  const contestCards = useMemo(() => {
-    return portfolioSources.map((portfolio) => {
-      const contestInfo =
-        portfolio &&
-        typeof portfolio.contest === "object" &&
-        portfolio.contest !== null
-          ? portfolio.contest
-          : undefined;
+    const now = new Date();
 
-      const contestIdentifier =
-        (contestInfo?._id || portfolio?.contest || "").toString();
+    return apiData.map((c) => {
+      const startTime = c.startTime ? new Date(c.startTime) : null;
+      const endTime = c.endTime ? new Date(c.endTime) : null;
 
-      const pnlPercentage =
-        typeof portfolio?.pnlPercentage === "number"
-          ? portfolio.pnlPercentage
-          : 0;
+      // Get user's rank and PnL from leaderboard for completed contests
+      let userRank: number | undefined;
+      let userPnL: number | undefined;
+      let userPnLPercentage: number | undefined;
 
-      const pnlColor = pnlPercentage >= 0 ? "text-green-600" : "text-red-600";
+      if (tab === "completed" && Array.isArray(c.leaderboard)) {
+        if (c.isJoined && c.leaderboard.length > 0) {
+          const userEntry = c.leaderboard[0];
+          userRank = userEntry.rank;
+          userPnL = userEntry.pnl;
+          userPnLPercentage = userEntry.pnlPercentage;
+        }
+      }
 
       return {
-        id: contestIdentifier || portfolio?._id || Math.random().toString(),
-        portfolioId: portfolio?._id,
-        contestId: contestIdentifier,
-        title:
-          contestInfo?.name ||
-          `Contest ${contestIdentifier.slice(-6) || "—"}`,
-        pnl: formatPercentage(pnlPercentage),
-        pnlColor,
-        won:
-          typeof portfolio?.pnl === "number" && portfolio.pnl > 0
-            ? formatCurrency(portfolio.pnl)
-            : null,
-        firstPrice: formatCurrency(contestInfo?.pricePool),
-        entry: formatCurrency(contestInfo?.entryFee ?? 0),
-        spots: contestInfo?.totalSpots
-          ? `${contestInfo.totalSpots}`
-          : "—",
-        position:
-          typeof portfolio?.totalPoints === "number"
-            ? `${portfolio.totalPoints}`
-            : "—",
-        maxEntry: contestInfo?.maxEntriesPerUser
-          ? `${contestInfo.maxEntriesPerUser} Times`
-          : contestInfo?.category === "Head-to-Head"
-          ? "1 Time"
-          : "Unlimited",
-        distribution: contestInfo?.prizeDistribution?.length
-          ? `${contestInfo.prizeDistribution.length} payouts`
-          : "—",
+        id: c._id || "",
+        title: c.name || "Contest",
+        prizePool: c.pricePool || 0,
+        entryFee: c.entryFee || 0,
+        timeLeft: "",
+        startTime: startTime
+          ? startTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "",
+        endTime: endTime
+          ? endTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "",
+        spotsFilled:
+          c.totalJoined ||
+          (Array.isArray(c.participants) ? c.participants.length : 0),
+        totalSpots: c.totalSpots || 0,
+        winRate: undefined,
+        medalPrize: c.prizeDistribution?.length
+          ? c.prizeDistribution[0].prizeAmount
+          : undefined,
+        status: c.status || tab,
+        isJoined: c.isJoined || false,
+        isLocked: c.isLocked || tab !== "live",
+        category: c.category,
+        rank: userRank,
+        pnl: userPnL,
+        pnlPercentage: userPnLPercentage,
       };
     });
-  }, [portfolioSources]);
+  };
 
-  const summaryCard = contestCards[0];
+  /**
+   * Handle tab change
+   */
+  const handleTabChange = (tab: ContestTab) => {
+    setActiveTab(tab);
+  };
 
-  // ✅ Tab-wise content
-  const renderContent = () => {
-    switch (tab) {
-      case "My Contest":
-        return (
-          <>
-            <View className="bg-white rounded-xl p-4 shadow-sm mb-4">
-              <View className="flex-row justify-between items-start p-4">
-                <View className="flex align-center">
-                  <Text className="font-semibold text-base">
-                    🎉 {summaryCard ? "Contest joined!" : "No entries yet"}
-                  </Text>
-                  <Text className="text-2xl text-green-600 font-bold mt-2">
-                    {summaryCard?.won ?? formatCurrency(0)}
-                  </Text>
-                </View>
-                <Image
-                  source={require("../../assets/images/trading_chart.png")}
-                  className="w-[150px] h-[80px]"
-                  resizeMode="contain"
-                />
-              </View>
+  /**
+   * Handle contest click - navigate to contest details
+   */
+  const handleContestClick = (contestId: string) => {
+    router.push(`/my-contest/${contestId}`);
+  };
 
-              <Text className="bg-[#F5F7F4] p-3 text-sm border-b rounded-b-xl border-gray-300">
-                {contestCards.length} Contest
-                {contestCards.length === 1 ? "" : "s"} -{" "}
-                {portfolioSources.length} Portfolio
-                {portfolioSources.length === 1 ? "" : "s"}
-              </Text>
-            </View>
-
-            {loading && (
-              <View className="py-4">
-                <ActivityIndicator />
-              </View>
-            )}
-
-            {!loading && !contestCards.length && (
-              <View className="bg-white rounded-xl p-6 items-center">
-                <Text className="text-gray-600 mb-4 text-center">
-                  You haven’t joined any contests yet.
-                </Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/create-portfolio")}
-                  className="bg-green-600 px-5 py-2 rounded-full"
-                >
-                  <Text className="text-white font-semibold">
-                    Create a portfolio
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {contestCards.map((c) => (
-              <TouchableOpacity
-                key={c.id}
-                className="bg-white rounded-xl shadow-sm mb-4 overflow-hidden border border-gray-200"
-                onPress={() =>
-                  c.contestId &&
-                  router.push({
-                    pathname: "/my-contest/[contestId]",
-                    params: { contestId: c.contestId },
-                  })
-                }
-              >
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
-                  <Text className="font-semibold text-base">{c.title}</Text>
-                  <Ionicons name="chevron-forward" size={18} color="#6b7280" />
-                </View>
-
-                <View className="flex-row justify-between items-center px-4 py-3 border-b border-gray-100">
-                  <View className="flex-row items-center">
-                    <Text className="text-gray-600 mr-2">P&L</Text>
-                    <View className="bg-green-50 px-2 py-1 rounded">
-                      <Text className={`${c.pnlColor} font-semibold text-sm`}>
-                        {c.pnl}
-                      </Text>
-                    </View>
-                  </View>
-                  {c.won && (
-                    <View className="bg-green-50 px-3 py-1 rounded">
-                      <Text className="text-green-600 font-semibold text-sm">
-                        {c.won}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                <View className="px-4 py-3 space-y-2">
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                      <Ionicons name="trophy-outline" size={16} color="#6b7280" />
-                      <Text className="ml-2 text-gray-600">Prize Pool</Text>
-                    </View>
-                    <Text className="font-semibold text-sm">{c.firstPrice}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                      <MaterialIcons
-                        name="currency-rupee"
-                        size={16}
-                        color="#6b7280"
-                      />
-                      <Text className="ml-2 text-gray-600">Entry</Text>
-                    </View>
-                    <Text className="font-semibold text-sm">{c.entry}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                      <Ionicons name="people-outline" size={16} color="#6b7280" />
-                      <Text className="ml-2 text-gray-600">Spots</Text>
-                    </View>
-                    <Text className="font-semibold text-sm">{c.spots}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                      <FontAwesome5 name="flag" size={14} color="#6b7280" />
-                      <Text className="ml-2 text-gray-600">Points</Text>
-                    </View>
-                    <Text className="font-semibold text-sm">{c.position}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                      <MaterialIcons name="layers" size={16} color="#6b7280" />
-                      <Text className="ml-2 text-gray-600">Max Entry</Text>
-                    </View>
-                    <Text className="font-semibold text-sm">{c.maxEntry}</Text>
-                  </View>
-
-                  <View className="flex-row justify-between items-center">
-                    <View className="flex-row items-center">
-                      <Ionicons name="gift-outline" size={16} color="#6b7280" />
-                      <Text className="ml-2 text-gray-600">
-                        Prize Distribution
-                      </Text>
-                    </View>
-                    <Text className="font-semibold text-sm">
-                      {c.distribution}
-                    </Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </>
-        );
-
-      case "My Portfolio":
-        return <MyPortfolio portfolio={portfolioSources[0]} />;
-
-      case "Winner":
-        return (
-    <WinnerTab/>
-        );
-
-      default:
-        return null;
+  /**
+   * Render empty state
+   */
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <View className="py-12 items-center">
+          <ActivityIndicator size="large" color="#ef4444" />
+          <Text className="mt-4 text-gray-500">Loading contests...</Text>
+        </View>
+      );
     }
+
+    if (error) {
+      return (
+        <View className="py-12 items-center px-4">
+          <Text className="text-red-500 text-center mb-2">{error}</Text>
+          <TouchableOpacity
+            onPress={() => selectedTabKey && fetchContests(activeTab, selectedTabKey)}
+            className="bg-red-500 px-6 py-2 rounded-lg mt-4"
+          >
+            <Text className="text-white font-semibold">Retry</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View className="py-12 items-center px-4">
+        <Text className="text-gray-500 text-center text-lg">
+          No {activeTab} contests available
+        </Text>
+        <Text className="text-gray-400 text-center text-sm mt-2">
+          {activeTab === "completed"
+            ? "You haven't joined any completed contests yet."
+            : "Check back later for live contests."}
+        </Text>
+      </View>
+    );
   };
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
-      <View className="flex-1 bg-gray-50">
-        <Header title="Beginner’s Arena" />
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: "#f7f7f7" }}
+        edges={["left", "right", "bottom"]}
+      >
+        <FlatList
+          data={contests}
+          keyExtractor={(item, index) => item.id || `contest-${index}`}
+          ListHeaderComponent={
+            <View>
+              <Header />
 
-        {/* Tabs */}
-        <View className="flex-row border-b border-gray-200 bg-white">
-          {["My Contest", "My Portfolio", "Winner"].map((item) => (
-            <TouchableOpacity
-              key={item}
-              className="flex-1 items-center py-3"
-              onPress={() => setTab(item)}
-            >
-              <Text
-                className={`text-sm font-semibold ${
-                  tab === item ? "text-red-600" : "text-gray-600"
-                }`}
-              >
-                {item}
-              </Text>
-              {tab === item && (
-                <View className="h-0.5 w-full bg-red-600 absolute bottom-0" />
+              {/* Status Filter Tabs */}
+              <View className="flex-row bg-white border-b border-gray-200">
+                {[
+                  { key: "live" as ContestTab, label: "Live" },
+                  { key: "completed" as ContestTab, label: "Completed" },
+                ].map((tab) => (
+                  <TouchableOpacity
+                    key={tab.key}
+                    className={`flex-1 py-3 items-center border-b-2 ${
+                      activeTab === tab.key
+                        ? "border-red-500"
+                        : "border-transparent"
+                    }`}
+                    onPress={() => handleTabChange(tab.key)}
+                  >
+                    <Text
+                      className={`text-sm font-semibold ${
+                        activeTab === tab.key
+                          ? "text-red-500"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {tab.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Match Tabs */}
+              <SegmentedTabs
+                tabs={tabs}
+                value={selectedTabKey}
+                onChange={setSelectedTabKey}
+              />
+
+              {/* Loading indicator */}
+              {loading && (
+                <View className="py-4 items-center">
+                  <ActivityIndicator size="small" color="#ef4444" />
+                </View>
               )}
+            </View>
+          }
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleContestClick(item.id)}>
+              <ContestCard data={item} />
             </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Scrollable Content with safe bottom space */}
-        <ScrollView
-          className="p-2"
-          contentContainerStyle={{ paddingBottom: 80 }} // ✅ margin bottom safe
+          )}
+          ListEmptyComponent={renderEmptyState()}
+          contentContainerStyle={{
+            paddingBottom: 24,
+            flexGrow: contests.length === 0 ? 1 : 0,
+          }}
           showsVerticalScrollIndicator={false}
-        >
-          {renderContent()}
-        </ScrollView>
-      </View>
+        />
       </SafeAreaView>
     </>
   );
-};
-
-export default CompletedContestScreen;
+}
