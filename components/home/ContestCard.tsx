@@ -12,6 +12,7 @@ export interface Contest {
   entryFee: number; // e.g., 50
   timeLeft: string; // e.g., "1h : 47m"
   startTime?: string; // e.g., "3:20 PM"
+  endTime?: string; // e.g., "5:20 PM"
   spotsFilled: number; // e.g., 238
   totalSpots: number; // e.g., 250
   winRate?: number; // e.g., 40
@@ -19,9 +20,14 @@ export interface Contest {
   status?: string; // e.g., "upcoming", "live", "completed"
   isJoined?: boolean; // Whether user has joined this contest
   isLocked?: boolean; // Whether contest is locked (can't join)
+  category?: string; // Contest category
+  rank?: number; // User's rank in completed contest
+  pnl?: number; // Profit and Loss amount
+  pnlPercentage?: number; // Profit and Loss percentage
 }
 
-const currency = (n: number) => `₹${n?.toLocaleString("en-IN")}`;
+const currency = (n?: number | null) => 
+  typeof n === "number" ? `₹${n.toLocaleString("en-IN")}` : "₹0";
 
 export default function ContestCard({
   data,
@@ -95,26 +101,68 @@ const percent = Math.min(
 
       {/* Bottom meta */}
       <View className="flex-row items-center px-4 py-3">
-        <View className="flex-row items-center mr-4">
-          <Ionicons name="medal" size={16} color="#f59e0b" />
-          <Text className="font-bold ml-1">
-            {currency(data?.medalPrize ?? Math.round(data?.prizePool / 2))}
-          </Text>
-        </View>
+        {data?.status === 'completed' && data?.isJoined ? (
+          // Show rank and PnL for completed contests
+          <>
+            {data.rank !== undefined && (
+              <View className="flex-row items-center mr-4">
+                <Ionicons name="trophy" size={16} color="#f59e0b" />
+                <Text className="font-bold ml-1">
+                  Rank #{data.rank}
+                </Text>
+              </View>
+            )}
+            {data.pnl !== undefined && (
+              <View className="flex-row items-center mr-4">
+                <Ionicons 
+                  name={data.pnl >= 0 ? "trending-up" : "trending-down"} 
+                  size={16} 
+                  color={data.pnl >= 0 ? "#10b981" : "#ef4444"} 
+                />
+                <Text 
+                  className={`font-semibold ml-1 ${
+                    data.pnl >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {data.pnl >= 0 ? "+" : ""}{currency(data.pnl)}
+                  {data.pnlPercentage !== undefined && 
+                    ` (${data.pnlPercentage >= 0 ? "+" : ""}${data.pnlPercentage.toFixed(2)}%)`
+                  }
+                </Text>
+              </View>
+            )}
+            {data.category && (
+              <View className="flex-row items-center">
+                <Ionicons name="pricetag-outline" size={16} color="#6b7280" />
+                <Text className="text-gray-500 ml-1">{data.category}</Text>
+              </View>
+            )}
+          </>
+        ) : (
+          // Default meta for upcoming/live contests
+          <>
+            <View className="flex-row items-center mr-4">
+              <Ionicons name="medal" size={16} color="#f59e0b" />
+              <Text className="font-bold ml-1">
+                {currency(data?.medalPrize ?? Math.round(data?.prizePool / 2))}
+              </Text>
+            </View>
 
-        <View className="flex-row items-center mr-4">
-          <Ionicons name="trophy-outline" size={16} color="#6b7280" />
-          <Text className="text-gray-500 ml-1">
-            {(data.winRate ?? 40) + "%"}
-          </Text>
-        </View>
+            <View className="flex-row items-center mr-4">
+              <Ionicons name="trophy-outline" size={16} color="#6b7280" />
+              <Text className="text-gray-500 ml-1">
+                {(data.winRate ?? 40) + "%"}
+              </Text>
+            </View>
 
-        <View className="flex-row items-center">
-          <Ionicons name="people-outline" size={16} color="#6b7280" />
-          <Text className="text-gray-500 ml-1">
-            M {Math.max(10, Math.round(data.entryFee / 2))}
-          </Text>
-        </View>
+            <View className="flex-row items-center">
+              <Ionicons name="people-outline" size={16} color="#6b7280" />
+              <Text className="text-gray-500 ml-1">
+                M {Math.max(10, Math.round(data.entryFee / 2))}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
     </View>
   );

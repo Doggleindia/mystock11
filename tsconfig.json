@@ -11,6 +11,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "app/(tabs)/profile.jsx"
-, "app/Signup.jsx"  ]
+    "app/(tabs)/profile.jsx",
+    "app/Signup.jsx"
+  ]
 }

@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 
-const DEFAULT_API_BASE_URL = "http://10.236.40.12:5500";
+const DEFAULT_API_BASE_URL = "http://10.39.139.12:5500";
 
 type Extra = {
   API_BASE_URL?: string;
