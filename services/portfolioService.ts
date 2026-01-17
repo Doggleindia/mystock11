@@ -163,4 +163,26 @@ export const fetchPortfolioById = async (portfolioId: string) => {
   return response.data as PortfolioDetailResponse;
 };
 
+// H2H Contest APIs
+export interface H2HAvailableResponse {
+  success?: boolean;
+  h2hSlot?: number;
+  canJoin?: boolean;
+  isFull?: boolean;
+  contestId?: string;
+  contest?: {
+    _id: string;
+    name?: string;
+    [key: string]: unknown;
+  };
+  message?: string;
+}
+
+export const getH2HAvailableSlot = async (matchId: string, templateId: string) => {
+  const response = await axiosInstance.get(
+    `/api/match-contests/h2h/available/${matchId}/${templateId}`
+  );
+  return response.data as H2HAvailableResponse;
+};
+
 

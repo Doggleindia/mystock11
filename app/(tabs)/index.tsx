@@ -6,6 +6,7 @@ import SegmentedTabs from "@/components/home/SegmentedTabs";
 import axiosInstance from "@/services/axiosInstance";
 import { API_BASE_URL } from "@/services/config";
 import axios, { CancelTokenSource } from "axios";
+import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -38,7 +39,7 @@ interface ContestApiData {
   status: string;
   isJoined?: boolean;
   isLocked?: boolean;
-  prizeDistribution?: Array<{ prizeAmount: number }>;
+  prizeDistribution?: Array<{ rankFrom: number; rankTo: number; prizeAmount: number }>;
   leaderboard?: Array<{
     userId: string;
     portfolioId: string;
@@ -46,6 +47,12 @@ interface ContestApiData {
     pnl?: number;
     pnlPercentage?: number;
   }>;
+  match?: {
+    _id: string;
+  };
+  template?: {
+    _id: string;
+  };
 }
 
 export default function Home() {
@@ -307,6 +314,11 @@ export default function Home() {
         isJoined: c.isJoined || false,
         isLocked: c.isLocked || tab !== "upcoming",
         category: c.category,
+        // H2H fields
+        matchId: c.match?._id,
+        templateId: c.template?._id,
+        // Prize distribution
+        prizeDistribution: c.prizeDistribution,
         // Additional fields for completed contests
         rank: userRank,
         pnl: userPnL,
@@ -505,7 +517,23 @@ export default function Home() {
             )}
           </View>
         }
-        renderItem={({ item }) => <ContestCard data={item} />}
+        renderItem={({ item }) => {
+          // Make live/completed contests clickable
+          const isClickable = item.status === 'live' || item.status === 'completed' || item.isJoined;
+          
+          if (isClickable) {
+            return (
+              <TouchableOpacity
+                onPress={() => router.push(`/my-contest/${item.id}`)}
+                activeOpacity={0.7}
+              >
+                <ContestCard data={item} />
+              </TouchableOpacity>
+            );
+          }
+          
+          return <ContestCard data={item} />;
+        }}
         ListEmptyComponent={renderEmptyState()}
         contentContainerStyle={{
           paddingBottom: 24,

@@ -31,7 +31,7 @@ interface ContestApiData {
   status: string;
   isJoined?: boolean;
   isLocked?: boolean;
-  prizeDistribution?: Array<{ prizeAmount: number }>;
+  prizeDistribution?: Array<{ rankFrom: number; rankTo: number; prizeAmount: number }>;
   leaderboard?: Array<{
     userId: string;
     portfolioId: string;
@@ -39,6 +39,12 @@ interface ContestApiData {
     pnl?: number;
     pnlPercentage?: number;
   }>;
+  match?: {
+    _id: string;
+  };
+  template?: {
+    _id: string;
+  };
 }
 
 export default function ContestsScreen() {
@@ -259,6 +265,11 @@ export default function ContestsScreen() {
         isJoined: c.isJoined || false,
         isLocked: c.isLocked || tab !== "live",
         category: c.category,
+        // H2H fields
+        matchId: c.match?._id,
+        templateId: c.template?._id,
+        // Prize distribution
+        prizeDistribution: c.prizeDistribution,
         rank: userRank,
         pnl: userPnL,
         pnlPercentage: userPnLPercentage,

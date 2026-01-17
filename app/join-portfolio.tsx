@@ -251,25 +251,17 @@ export default function JoinPortfolio() {
         });
       }
 
+      // Clear draft immediately
+      clearDraftPortfolio();
+
       Toast.show({
         type: "success",
         text1: "Contest joined",
-        text2: "Redirecting you to My Contest…",
+        text2: joinResponse?.message || "Your portfolio has been entered into the contest.",
       });
 
-      const doNavigate = () => {
-        if (!rootNavigationState?.key) return;
-        router.replace("/my-contest");
-      };
-
-      Alert.alert(
-        "Joined successfully",
-        joinResponse?.message ||
-          "Your portfolio has been entered into the contest.",
-        [{ text: "OK", onPress: doNavigate }]
-      );
-
-      clearDraftPortfolio();
+      // Navigate to My Contests immediately (use replace to prevent back navigation)
+      router.replace("/my-contest");
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
