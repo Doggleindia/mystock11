@@ -6,13 +6,7 @@ import {
   useRootNavigationState,
 } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  Alert,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -66,14 +60,10 @@ const PortfolioSummary = ({
         >
           <View>
             <Text className="font-medium">{member.stockSymbol}</Text>
-            <Text className="text-xs text-gray-500">
-              {member.companyName}
-            </Text>
+            <Text className="text-xs text-gray-500">{member.companyName}</Text>
           </View>
           <View className="items-end">
-            <Text className="font-semibold">
-              ₹{member.buyPrice.toFixed(2)}
-            </Text>
+            <Text className="font-semibold">₹{member.buyPrice.toFixed(2)}</Text>
             <Text className="text-xs text-gray-500">
               Qty: {member.quantity}
             </Text>
@@ -85,8 +75,9 @@ const PortfolioSummary = ({
 );
 
 export default function JoinPortfolio() {
-  const { contestId: routeContestId } =
-    useLocalSearchParams<{ contestId?: string }>();
+  const { contestId: routeContestId } = useLocalSearchParams<{
+    contestId?: string;
+  }>();
   const rootNavigationState = useRootNavigationState();
 
   const { draftPortfolio, clearDraftPortfolio, setLastJoinedContest } =
@@ -128,11 +119,11 @@ export default function JoinPortfolio() {
       try {
         setLoadingContest(true);
         const response = await axios.get(
-          `${API_BASE_URL}/api/match-contests/admin/${contestId}`
+          `${API_BASE_URL}/api/match-contests/admin/${contestId}`,
         );
         setContestDetails(response.data?.data || null);
       } catch (error) {
-        console.error('Failed to fetch contest details:', error);
+        console.error("Failed to fetch contest details:", error);
         setContestDetails(null);
       } finally {
         setLoadingContest(false);
@@ -148,33 +139,27 @@ export default function JoinPortfolio() {
     () =>
       activePortfolio?.team.reduce(
         (sum, stock) => sum + stock.buyPrice * stock.quantity,
-        0
+        0,
       ) ?? 0,
-    [activePortfolio]
+    [activePortfolio],
   );
 
   const handleJoinContest = useCallback(async () => {
     if (!hasContest) {
       Alert.alert(
         "No contest",
-        "No contest selected. Please go back and select a contest first."
+        "No contest selected. Please go back and select a contest first.",
       );
       return;
     }
 
     if (!activePortfolio) {
-      Alert.alert(
-        "No portfolio",
-        "Please select or create a portfolio first."
-      );
+      Alert.alert("No portfolio", "Please select or create a portfolio first.");
       return;
     }
 
     if (!activePortfolio.captain || !activePortfolio.viceCaptain) {
-      Alert.alert(
-        "Missing leaders",
-        "Captain and vice captain are required."
-      );
+      Alert.alert("Missing leaders", "Captain and vice captain are required.");
       return;
     }
 
@@ -186,40 +171,39 @@ export default function JoinPortfolio() {
         team: activePortfolio.team.map((member) => ({
           ...member,
           isCaptain: member.stockSymbol === activePortfolio.captain,
-          isViceCaptain:
-            member.stockSymbol === activePortfolio.viceCaptain,
+          isViceCaptain: member.stockSymbol === activePortfolio.viceCaptain,
         })),
       };
 
       const joinResponse = await createPortfolioAndJoinContest(
         contestId as string,
-        payload
+        payload,
       );
 
       const summaryData = joinResponse?.data;
-      
+
       // Debit wallet amount for contest join - use contest entry fee
       let beforeBalance = 0;
       let afterBalance = 0;
       const entryFee = contestDetails?.entryFee || 0;
-      
+
       if (entryFee > 0) {
         try {
           const debitResponse = await walletService.debit({
             amount: entryFee,
-            purpose: 'contest_join',
+            purpose: "contest_join",
             meta: {
               contestId: contestId,
               portfolioId: summaryData?.portfolio?._id,
             },
           });
-          
+
           if (debitResponse.success && debitResponse.data) {
             beforeBalance = debitResponse.data.transaction?.beforeBalance || 0;
             afterBalance = debitResponse.data.transaction?.afterBalance || 0;
             Toast.show({
-              type: 'success',
-              text1: 'Wallet debited',
+              type: "success",
+              text1: "Wallet debited",
               text2: `₹${entryFee} debited for contest entry`,
             });
           }
@@ -227,13 +211,16 @@ export default function JoinPortfolio() {
           const message =
             debitError?.response?.data?.message ||
             debitError?.message ||
-            'Failed to debit wallet';
-          
+            "Failed to debit wallet";
+
           // Check if insufficient balance
           if (/insufficient/i.test(message)) {
-            Alert.alert('Insufficient Balance', 'Please add money to your wallet and try again.');
+            Alert.alert(
+              "Insufficient Balance",
+              "Please add money to your wallet and try again.",
+            );
           } else {
-            Alert.alert('Wallet Error', message);
+            Alert.alert("Wallet Error", message);
           }
           setIsJoining(false);
           return;
@@ -257,11 +244,13 @@ export default function JoinPortfolio() {
       Toast.show({
         type: "success",
         text1: "Contest joined",
-        text2: joinResponse?.message || "Your portfolio has been entered into the contest.",
+        text2:
+          joinResponse?.message ||
+          "Your portfolio has been entered into the contest.",
       });
 
       // Navigate to My Contests immediately (use replace to prevent back navigation)
-      router.replace("/my-contest");
+      router.replace("/contests");
     } catch (error: any) {
       const message =
         error?.response?.data?.message ||
@@ -298,131 +287,131 @@ export default function JoinPortfolio() {
 
   return (
     <>
-    <Stack.Screen options={{ headerShown: false }} />
-    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
-      <View className="flex-1 bg-white">
-        {!hasContest ? (
-          // Fallback UI when there is no contestId
-          <View className="flex-1 items-center justify-center px-4">
-            <Text className="text-center mb-3">
-              No contest selected. Please go back and select a contest.
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="border border-gray-200 px-4 py-2 rounded"
-            >
-              <Text>Go back</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            <PortfolioHeader timeLeft="1h : 47m" />
-            <MarketOverview
-              index="NIFTY 50"
-              value="24,827.45"
-              change="-28.15"
-              changePercent="-0.15%"
-            />
-
-            <ScrollView className="flex-1 px-4 pt-4">
-              <View className="mb-4 rounded-xl bg-gray-50 p-4">
-                <Text className="text-xs font-semibold text-gray-500 tracking-widest mb-1">
-                  CONTEST ID
-                </Text>
-                <Text className="text-lg font-semibold">
-                  #{contestId ? contestId.slice(-6) : "---"}
-                </Text>
-                <View className="mt-3 flex-row justify-between">
-                  <View>
-                    <Text className="text-xs text-gray-500">Entry Fee</Text>
-                    <Text className="text-base font-semibold text-green-600">
-                      ₹50
-                    </Text>
-                  </View>
-                  <View className="items-end">
-                    <Text className="text-xs text-gray-500">
-                      Portfolios Joined
-                    </Text>
-                    <Text className="text-base font-semibold">
-                      {portfolios.length} / 11
-                    </Text>
-                  </View>
-                </View>
-              </View>
-
-              <TableHeader />
-
-              {portfolios.length > 0 ? (
-                portfolios.map((portfolio, index) => (
-                  <PortfolioSummary
-                    key={`portfolio-${index}`}
-                    portfolio={portfolio}
-                    index={index}
-                    isActive={index === activeIndex}
-                    onSelect={() => setActiveIndex(index)}
-                  />
-                ))
-              ) : (
-                <View className="py-10 items-center">
-                  <Text className="text-gray-500 mb-2">
-                    No portfolios ready to join.
-                  </Text>
-                  <TouchableOpacity
-                    onPress={handleAddPortfolio}
-                    className="border border-gray-200 px-4 py-2 rounded"
-                  >
-                    <Text className="text-gray-700 font-semibold">
-                      Create one now
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </ScrollView>
-
-            <View className="bg-white border-t border-gray-100 px-4 py-4">
-              <View className="flex-row justify-between mb-3">
-                <Text className="text-sm text-gray-500">Credits in play</Text>
-                <Text className="text-base font-semibold">
-                  ₹{totalCredits.toFixed(2)}
-                </Text>
-              </View>
-
-              {portfolios.length > 0 && (
-                <TouchableOpacity
-                  onPress={handleCloneActive}
-                  className="mb-3 rounded-lg border border-dashed border-green-500 py-3"
-                >
-                  <Text className="text-center font-semibold text-green-600">
-                    Duplicate active portfolio
-                  </Text>
-                </TouchableOpacity>
-              )}
-
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={{ flex: 1 }} edges={["left", "right", "bottom"]}>
+        <View className="flex-1 bg-white">
+          {!hasContest ? (
+            // Fallback UI when there is no contestId
+            <View className="flex-1 items-center justify-center px-4">
+              <Text className="text-center mb-3">
+                No contest selected. Please go back and select a contest.
+              </Text>
               <TouchableOpacity
-                onPress={handleAddPortfolio}
-                className="mb-3 rounded-lg border border-gray-200 py-3"
+                onPress={() => router.back()}
+                className="border border-gray-200 px-4 py-2 rounded"
               >
-                <Text className="text-center font-semibold text-gray-800">
-                  Create another portfolio
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleJoinContest}
-                disabled={isJoining}
-                className={`rounded-lg py-3 ${
-                  isJoining ? "bg-green-300" : "bg-green-600"
-                }`}
-              >
-                <Text className="text-center font-semibold text-white">
-                  {isJoining ? "Joining..." : "Join contest"}
-                </Text>
+                <Text>Go back</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
-      </View>
-    </SafeAreaView>
+          ) : (
+            <>
+              <PortfolioHeader timeLeft="1h : 47m" />
+              <MarketOverview
+                index="NIFTY 50"
+                value="24,827.45"
+                change="-28.15"
+                changePercent="-0.15%"
+              />
+
+              <ScrollView className="flex-1 px-4 pt-4">
+                <View className="mb-4 rounded-xl bg-gray-50 p-4">
+                  <Text className="text-xs font-semibold text-gray-500 tracking-widest mb-1">
+                    CONTEST ID
+                  </Text>
+                  <Text className="text-lg font-semibold">
+                    #{contestId ? contestId.slice(-6) : "---"}
+                  </Text>
+                  <View className="mt-3 flex-row justify-between">
+                    <View>
+                      <Text className="text-xs text-gray-500">Entry Fee</Text>
+                      <Text className="text-base font-semibold text-green-600">
+                        ₹50
+                      </Text>
+                    </View>
+                    <View className="items-end">
+                      <Text className="text-xs text-gray-500">
+                        Portfolios Joined
+                      </Text>
+                      <Text className="text-base font-semibold">
+                        {portfolios.length} / 11
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <TableHeader />
+
+                {portfolios.length > 0 ? (
+                  portfolios.map((portfolio, index) => (
+                    <PortfolioSummary
+                      key={`portfolio-${index}`}
+                      portfolio={portfolio}
+                      index={index}
+                      isActive={index === activeIndex}
+                      onSelect={() => setActiveIndex(index)}
+                    />
+                  ))
+                ) : (
+                  <View className="py-10 items-center">
+                    <Text className="text-gray-500 mb-2">
+                      No portfolios ready to join.
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleAddPortfolio}
+                      className="border border-gray-200 px-4 py-2 rounded"
+                    >
+                      <Text className="text-gray-700 font-semibold">
+                        Create one now
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </ScrollView>
+
+              <View className="bg-white border-t border-gray-100 px-4 py-4">
+                <View className="flex-row justify-between mb-3">
+                  <Text className="text-sm text-gray-500">Credits in play</Text>
+                  <Text className="text-base font-semibold">
+                    ₹{totalCredits.toFixed(2)}
+                  </Text>
+                </View>
+
+                {portfolios.length > 0 && (
+                  <TouchableOpacity
+                    onPress={handleCloneActive}
+                    className="mb-3 rounded-lg border border-dashed border-green-500 py-3"
+                  >
+                    <Text className="text-center font-semibold text-green-600">
+                      Duplicate active portfolio
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                <TouchableOpacity
+                  onPress={handleAddPortfolio}
+                  className="mb-3 rounded-lg border border-gray-200 py-3"
+                >
+                  <Text className="text-center font-semibold text-gray-800">
+                    Create another portfolio
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleJoinContest}
+                  disabled={isJoining}
+                  className={`rounded-lg py-3 ${
+                    isJoining ? "bg-green-300" : "bg-green-600"
+                  }`}
+                >
+                  <Text className="text-center font-semibold text-white">
+                    {isJoining ? "Joining..." : "Join contest"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
+      </SafeAreaView>
     </>
   );
 }

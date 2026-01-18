@@ -58,13 +58,13 @@ export default function ContestCard({
   const handleJoinClick = async () => {
     if (isCompleted || data?.isJoined || isLive || data?.isLocked) {
       // Navigate to contest details
-      router.push(`/my-contest/${data?.id}`);
+      router.push(`/contest/${data?.id}`);
       return;
     }
 
     if (!canJoin) {
       // Navigate to contest details if can't join
-      router.push(`/my-contest/${data?.id}`);
+      router.push(`/contest/${data?.id}`);
       return;
     }
 

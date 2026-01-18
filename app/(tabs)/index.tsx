@@ -53,6 +53,7 @@ interface ContestApiData {
   template?: {
     _id: string;
   };
+  
 }
 
 export default function Home() {
@@ -182,9 +183,9 @@ export default function Home() {
             // Try to get from admin endpoint first
             try {
               response = await axiosInstance.get(
-                `/api/match-contests/admin/`,
+                `/api/match-contests/contests/${matchId}`,
                 {
-                  params: { matchId },
+                  params: {  type: "live"  },
                   cancelToken: cancelToken.token,
                 }
               );

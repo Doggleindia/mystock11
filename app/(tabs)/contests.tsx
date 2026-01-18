@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type ContestTab = "live" | "completed";
+type ContestTab = "live" | "completed" | "join-contest";
 
 interface ContestApiData {
   _id: string;
@@ -31,7 +31,11 @@ interface ContestApiData {
   status: string;
   isJoined?: boolean;
   isLocked?: boolean;
-  prizeDistribution?: Array<{ rankFrom: number; rankTo: number; prizeAmount: number }>;
+  prizeDistribution?: Array<{
+    rankFrom: number;
+    rankTo: number;
+    prizeAmount: number;
+  }>;
   leaderboard?: Array<{
     userId: string;
     portfolioId: string;
@@ -59,7 +63,9 @@ export default function ContestsScreen() {
   const [error, setError] = useState<string | null>(null);
 
   // Match state
-  const [matches, setMatches] = useState<Array<{ id: string; name: string }>>([]);
+  const [matches, setMatches] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
   const [loadingMatches, setLoadingMatches] = useState(false);
 
   // Cancel token for aborting requests
@@ -78,7 +84,9 @@ export default function ContestsScreen() {
     // Cleanup: cancel previous request when tab or match changes
     return () => {
       if (cancelTokenRef.current) {
-        cancelTokenRef.current.cancel("Request cancelled due to tab/match change");
+        cancelTokenRef.current.cancel(
+          "Request cancelled due to tab/match change",
+        );
       }
     };
   }, [activeTab, selectedTabKey]);
@@ -138,18 +146,27 @@ export default function ContestsScreen() {
             {
               params: { type: "completed" },
               cancelToken: cancelToken.token,
-            }
+            },
+          );
+          rawData = response.data?.data ?? response.data ?? [];
+        } else if (tab === "contest-joined") {
+          response = await axiosInstance.get(
+            `/api/match-contests/contests/${matchId}`,
+            {
+              params: { type: "contest-joined" },
+              cancelToken: cancelToken.token,
+            },
           );
           rawData = response.data?.data ?? response.data ?? [];
         } else if (tab === "live") {
           // For live: fetch all and filter for live status
           try {
             response = await axiosInstance.get(
-              `/api/match-contests/admin/`,
+              `/api/match-contests/contests/${matchId}`,
               {
-                params: { matchId },
+                params: { type: "live" },
                 cancelToken: cancelToken.token,
-              }
+              },
             );
             const allContests = response.data?.data ?? response.data ?? [];
             const now = new Date();
@@ -173,13 +190,10 @@ export default function ContestsScreen() {
             });
           } catch (err) {
             // Fallback: try status filter endpoint
-            response = await axiosInstance.get(
-              `/api/match-contests/status`,
-              {
-                params: { statusFilter: "live" },
-                cancelToken: cancelToken.token,
-              }
-            );
+            response = await axiosInstance.get(`/api/match-contests/status`, {
+              params: { statusFilter: "live" },
+              cancelToken: cancelToken.token,
+            });
             rawData = response.data?.data ?? response.data ?? [];
           }
         }
@@ -195,7 +209,7 @@ export default function ContestsScreen() {
         console.error(`Error fetching ${tab} contests:`, err);
         setError(
           err?.response?.data?.message ||
-            `Failed to load ${tab} contests. Please try again.`
+            `Failed to load ${tab} contests. Please try again.`,
         );
         setContests([]);
       } finally {
@@ -203,7 +217,7 @@ export default function ContestsScreen() {
         cancelTokenRef.current = null;
       }
     },
-    []
+    [],
   );
 
   /**
@@ -211,7 +225,7 @@ export default function ContestsScreen() {
    */
   const normalizeContestData = (
     apiData: ContestApiData[],
-    tab: ContestTab
+    tab: ContestTab,
   ): Contest[] => {
     if (!Array.isArray(apiData)) return [];
 
@@ -273,6 +287,7 @@ export default function ContestsScreen() {
         rank: userRank,
         pnl: userPnL,
         pnlPercentage: userPnLPercentage,
+        
       };
     });
   };
@@ -288,7 +303,7 @@ export default function ContestsScreen() {
    * Handle contest click - navigate to contest details
    */
   const handleContestClick = (contestId: string) => {
-    router.push(`/my-contest/${contestId}`);
+    router.push(`/contest/${contestId}`);
   };
 
   /**
@@ -309,7 +324,9 @@ export default function ContestsScreen() {
         <View className="py-12 items-center px-4">
           <Text className="text-red-500 text-center mb-2">{error}</Text>
           <TouchableOpacity
-            onPress={() => selectedTabKey && fetchContests(activeTab, selectedTabKey)}
+            onPress={() =>
+              selectedTabKey && fetchContests(activeTab, selectedTabKey)
+            }
             className="bg-red-500 px-6 py-2 rounded-lg mt-4"
           >
             <Text className="text-white font-semibold">Retry</Text>
@@ -351,6 +368,7 @@ export default function ContestsScreen() {
                 {[
                   { key: "live" as ContestTab, label: "Live" },
                   { key: "completed" as ContestTab, label: "Completed" },
+                  { key: "contest-joined" as ContestTab, label: "My Contest" },
                 ].map((tab) => (
                   <TouchableOpacity
                     key={tab.key}
@@ -363,9 +381,7 @@ export default function ContestsScreen() {
                   >
                     <Text
                       className={`text-sm font-semibold ${
-                        activeTab === tab.key
-                          ? "text-red-500"
-                          : "text-gray-600"
+                        activeTab === tab.key ? "text-red-500" : "text-gray-600"
                       }`}
                     >
                       {tab.label}
