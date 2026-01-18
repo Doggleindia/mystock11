@@ -53,6 +53,8 @@ interface ContestApiData {
   template?: {
     _id: string;
   };
+  result?: "win" | "loss" | "draw" | string;
+  prizeAmount?: number;
   
 }
 
@@ -324,6 +326,8 @@ export default function Home() {
         rank: userRank,
         pnl: userPnL,
         pnlPercentage: userPnLPercentage,
+         result: c.result,
+      prizeAmount: c.prizeAmount,
       };
     });
   };

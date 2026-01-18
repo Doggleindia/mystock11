@@ -41,7 +41,7 @@
     },
     "extra": {
       "router": {},
-      "API_BASE_URL": "http://10.39.139.12:5500",
+      "API_BASE_URL": "https://apis.doggleindia.com",
       "eas": {
         "projectId": "b2bab1ac-f3f6-4c32-947d-83ca15bb61a6"
       }

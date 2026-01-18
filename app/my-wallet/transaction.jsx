@@ -14,7 +14,7 @@ export default function MyTransactionsScreen() {
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
     page: 1,
-    limit: 10,
+    limit: 1000,
     txnType: '',
     purpose: '',
     status: '',
@@ -39,8 +39,8 @@ export default function MyTransactionsScreen() {
       };
 
       if (activeTab === "Contest") {
-        params.purpose = "contest_join";
-        params.txnType = "debit";
+        params.purpose = "";
+        // params.txnType = "debit";
       } else if (activeTab === "Withdrawals") {
         params.purpose = "withdrawal";
         params.txnType = "debit";
@@ -108,7 +108,7 @@ export default function MyTransactionsScreen() {
 
   const getTransactionSubtype = (purpose: string): string => {
     if (purpose === 'contest_join') return 'Entry Paid';
-    if (purpose === 'winnings') return 'Winnings';
+    if (purpose === 'contest_win') return 'Winnings';
     return purpose || '';
   };
 

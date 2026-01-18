@@ -222,7 +222,7 @@ export default function ProfileHomeScreen() {
             </View>
             <View className="flex-1">
               <Text className="text-xs text-gray-600 font-semibold">Total Earnings</Text>
-              <Text className="text-sm font-bold text-gray-900">₹{(user?.stats?.totalEarnings || 0).toLocaleString()}</Text>
+              <Text className="text-sm font-bold text-gray-900">₹{(user?.stats?.walletBalance || 0).toLocaleString()}</Text>
             </View>
           </View>
 

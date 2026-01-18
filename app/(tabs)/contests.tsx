@@ -36,9 +36,11 @@ interface ContestApiData {
     rankTo: number;
     prizeAmount: number;
   }>;
+ userRank?: number;
+  joinedPortfolioId?: string;
   leaderboard?: Array<{
-    userId: string;
-    portfolioId: string;
+    user?: { _id: string; email?: string }; // Updated structure from API
+    portfolio?: string;
     rank: number;
     pnl?: number;
     pnlPercentage?: number;
@@ -49,6 +51,8 @@ interface ContestApiData {
   template?: {
     _id: string;
   };
+    prizeAmount?: number;
+  result?: string;
 }
 
 export default function ContestsScreen() {
@@ -223,74 +227,72 @@ export default function ContestsScreen() {
   /**
    * Normalize contest API data to Contest interface
    */
-  const normalizeContestData = (
-    apiData: ContestApiData[],
-    tab: ContestTab,
-  ): Contest[] => {
-    if (!Array.isArray(apiData)) return [];
+const normalizeContestData = (
+  apiData: ContestApiData[],
+  tab: ContestTab,
+): Contest[] => {
+  if (!Array.isArray(apiData)) return [];
 
-    const now = new Date();
+  return apiData.map((c) => {
+    const startTime = c.startTime ? new Date(c.startTime) : null;
+    const endTime = c.endTime ? new Date(c.endTime) : null;
 
-    return apiData.map((c) => {
-      const startTime = c.startTime ? new Date(c.startTime) : null;
-      const endTime = c.endTime ? new Date(c.endTime) : null;
+    // ✅ DECLARE variables FIRST
+    let userRank: number | undefined = undefined;
+    let userPnL: number | undefined = undefined;
+    let userPnLPercentage: number | undefined = undefined;
+    let prizeAmount: number | undefined = undefined;
+    let result: string | undefined = undefined;
 
-      // Get user's rank and PnL from leaderboard for completed contests
-      let userRank: number | undefined;
-      let userPnL: number | undefined;
-      let userPnLPercentage: number | undefined;
-
-      if (tab === "completed" && Array.isArray(c.leaderboard)) {
-        if (c.isJoined && c.leaderboard.length > 0) {
-          const userEntry = c.leaderboard[0];
-          userRank = userEntry.rank;
-          userPnL = userEntry.pnl;
-          userPnLPercentage = userEntry.pnlPercentage;
-        }
+    if (tab === "completed") {
+      console.log("Completed contest raw:", c.userRank, c.leaderboard?.[0]);
+      
+      // ✅ PRIORITY 1: Use direct user fields (most reliable)
+      userRank = c.userRank;  // API gives this directly!
+      prizeAmount = c.prizeAmount;
+      result = c.result;
+      
+      // ✅ PRIORITY 2: Fallback to leaderboard[0] for PnL
+      if (Array.isArray(c.leaderboard) && c.leaderboard.length > 0) {
+        userPnL = c.leaderboard[0].pnl;
+        userPnLPercentage = c.leaderboard[0].pnlPercentage;
       }
+    }
 
-      return {
-        id: c._id || "",
-        title: c.name || "Contest",
-        prizePool: c.pricePool || 0,
-        entryFee: c.entryFee || 0,
-        timeLeft: "",
-        startTime: startTime
-          ? startTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "",
-        endTime: endTime
-          ? endTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "",
-        spotsFilled:
-          c.totalJoined ||
-          (Array.isArray(c.participants) ? c.participants.length : 0),
-        totalSpots: c.totalSpots || 0,
-        winRate: undefined,
-        medalPrize: c.prizeDistribution?.length
-          ? c.prizeDistribution[0].prizeAmount
-          : undefined,
-        status: c.status || tab,
-        isJoined: c.isJoined || false,
-        isLocked: c.isLocked || tab !== "live",
-        category: c.category,
-        // H2H fields
-        matchId: c.match?._id,
-        templateId: c.template?._id,
-        // Prize distribution
-        prizeDistribution: c.prizeDistribution,
-        rank: userRank,
-        pnl: userPnL,
-        pnlPercentage: userPnLPercentage,
-        
-      };
-    });
-  };
+    return {
+      id: c._id || "",
+      title: c.name || "Contest",
+      prizePool: c.pricePool || 0,
+      entryFee: c.entryFee || 0,
+      timeLeft: "",
+      startTime: startTime
+        ? startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "",
+      endTime: endTime
+        ? endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "",
+      spotsFilled: c.totalJoined || (Array.isArray(c.participants) ? c.participants.length : 0),
+      totalSpots: c.totalSpots || 0,
+      winRate: undefined,
+      medalPrize: c.prizeDistribution?.[0]?.prizeAmount,
+      status: c.status || tab,
+      isJoined: c.isJoined || false,
+      isLocked: c.isLocked || true,
+      category: c.category,
+      matchId: c.match?._id,
+      templateId: c.template?._id,
+      prizeDistribution: c.prizeDistribution,
+      
+      // ✅ NOW these work!
+      rank: userRank,
+      pnl: userPnL,
+      pnlPercentage: userPnLPercentage,
+      prizeAmount,  // ✅
+      result,       // ✅
+    };
+  });
+};
+
 
   /**
    * Handle tab change
@@ -303,7 +305,7 @@ export default function ContestsScreen() {
    * Handle contest click - navigate to contest details
    */
   const handleContestClick = (contestId: string) => {
-    router.push(`/contest/${contestId}`);
+    router.push(`/my-contest/${contestId}`);
   };
 
   /**

@@ -1,10 +1,16 @@
+import { getH2HAvailableSlot } from "@/services/portfolioService";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ActivityIndicator, ScrollView } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 import ContestHeader from "./ContestHeader";
-import { getH2HAvailableSlot } from "@/services/portfolioService";
 
 export interface Contest {
   id: string;
@@ -27,10 +33,14 @@ export interface Contest {
   pnlPercentage?: number; // Profit and Loss percentage
   matchId?: string; // Match ID for H2H contests
   templateId?: string; // Template ID for H2H contests
-  prizeDistribution?: Array<{ rankFrom: number; rankTo: number; prizeAmount: number }>; // Prize distribution
+  prizeDistribution?: Array<{
+    rankFrom: number;
+    rankTo: number;
+    prizeAmount: number;
+  }>; // Prize distribution
 }
 
-const currency = (n?: number | null) => 
+const currency = (n?: number | null) =>
   typeof n === "number" ? `₹${n.toLocaleString("en-IN")}` : "₹0";
 
 export default function ContestCard({
@@ -45,20 +55,25 @@ export default function ContestCard({
 
   const percent = Math.min(
     100,
-    Math.round(((data?.spotsFilled ?? 0) / Math.max(1, data?.totalSpots ?? 1)) * 100)
+    Math.round(
+      ((data?.spotsFilled ?? 0) / Math.max(1, data?.totalSpots ?? 1)) * 100,
+    ),
   );
 
   const router = useRouter();
   const isH2H = data?.category === "Head-to-Head" || data?.category === "H2H";
-  const canJoin = data?.status === 'upcoming' && !data?.isLocked && !data?.isJoined;
-  const isLive = data?.status === 'live';
-  const isCompleted = data?.status === 'completed';
+  const canJoin =
+    data?.status === "upcoming" && !data?.isLocked && !data?.isJoined;
+  const isLive = data?.status === "live";
+  const isCompleted = data?.status === "completed";
+  const result = String(data?.result ?? "").toLowerCase(); // "win" | "loss" ...
+  const isWin = result === "win";
 
   // Handle join click with H2H flow
   const handleJoinClick = async () => {
     if (isCompleted || data?.isJoined || isLive || data?.isLocked) {
       // Navigate to contest details
-      router.push(`/contest/${data?.id}`);
+      router.push(`/my-contest/${data?.id}`);
       return;
     }
 
@@ -72,8 +87,11 @@ export default function ContestCard({
     if (isH2H && data?.matchId && data?.templateId) {
       setIsProcessingJoin(true);
       try {
-        const h2hResponse = await getH2HAvailableSlot(data.matchId, data.templateId);
-        
+        const h2hResponse = await getH2HAvailableSlot(
+          data.matchId,
+          data.templateId,
+        );
+
         if (h2hResponse.isFull || !h2hResponse.canJoin) {
           Toast.show({
             type: "error",
@@ -85,8 +103,9 @@ export default function ContestCard({
         }
 
         // Use the contestId from H2H response if available
-        const actualContestId = h2hResponse.contestId || h2hResponse.contest?._id || data.id;
-        
+        const actualContestId =
+          h2hResponse.contestId || h2hResponse.contest?._id || data.id;
+
         // Navigate to create portfolio with the actual contest ID
         router.push(`/create-portfolio?contestId=${actualContestId}`);
       } catch (error: any) {
@@ -94,7 +113,9 @@ export default function ContestCard({
         Toast.show({
           type: "error",
           text1: "Failed to join",
-          text2: error?.response?.data?.message || "Unable to check slot availability. Please try again.",
+          text2:
+            error?.response?.data?.message ||
+            "Unable to check slot availability. Please try again.",
         });
       } finally {
         setIsProcessingJoin(false);
@@ -110,12 +131,40 @@ export default function ContestCard({
   };
 
   return (
-    <View className="bg-white rounded-xl mx-4 my-2 shadow-sm border border-gray-200 overflow-hidden">
-        <ContestHeader
-          title={data?.title}
-          timeLeft={data?.timeLeft}
-          startTime={data?.startTime}
-        />
+    <View
+      className={`bg-white rounded-xl mx-4 my-2 shadow-sm border border-gray-200 overflow-hidden ${
+        isCompleted ? "border-green-200 bg-white" : "border-gray-200 bg-white"
+      }`}
+    >
+      <ContestHeader
+        title={data?.title}
+        timeLeft={data?.timeLeft}
+        startTime={data?.startTime}
+      />
+
+      {isCompleted && (
+        <View className="px-4 pt-3">
+          <View
+            className={`self-start flex-row items-center rounded-full border px-3 py-1 ${
+              isWin
+                ? "bg-green-50 border-green-200"
+                : "bg-slate-50 border-slate-200"
+            }`}
+          >
+            <Ionicons
+              name="checkmark-circle"
+              size={14}
+              color={isWin ? "#16a34a" : "#64748b"}
+            />
+            <Text
+              className={`ml-1 text-xs font-semibold ${isWin ? "text-green-700" : "text-slate-700"}`}
+            >
+              COMPLETED
+              {data?.result ? ` • ${String(data.result).toUpperCase()}` : ""}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Prize row */}
       <View className="flex-row items-center px-4 pt-2">
@@ -130,10 +179,7 @@ export default function ContestCard({
       {/* Progress */}
       <View className="px-4 mt-2 pb-1">
         <View className="h-2 bg-slate-100 rounded-full overflow-hidden">
-          <View
-            className="bg-red-500 h-2"
-            style={{ width: `${percent}%` }}
-          />
+          <View className="bg-red-500 h-2" style={{ width: `${percent}%` }} />
         </View>
         <Text className="text-xs text-gray-500 mt-1">
           {`${data?.spotsFilled}/${data?.totalSpots} Spots`}
@@ -149,8 +195,8 @@ export default function ContestCard({
             isProcessingJoin || (isLive && data?.isLocked)
               ? "bg-gray-300"
               : canJoin
-              ? "bg-green-600"
-              : "bg-gray-400"
+                ? "bg-green-600"
+                : "bg-gray-400"
           }`}
         >
           {isProcessingJoin ? (
@@ -158,7 +204,7 @@ export default function ContestCard({
           ) : (
             <Text className="text-center font-semibold text-white text-base">
               {isCompleted || data?.isJoined || isLive || data?.isLocked
-                ? 'View Details'
+                ? "View Details"
                 : `Join ₹${data?.entryFee}`}
             </Text>
           )}
@@ -168,13 +214,18 @@ export default function ContestCard({
       {/* Prize Distribution */}
       {data?.prizeDistribution && data.prizeDistribution.length > 0 && (
         <View className="px-4 pb-2 border-t border-gray-100">
-          <Text className="text-xs text-gray-500 mb-1 mt-2">Prize Distribution</Text>
+          <Text className="text-xs text-gray-500 mb-1 mt-2">
+            Prize Distribution
+          </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex-row space-x-2">
               {data.prizeDistribution.map((prize, idx) => (
                 <View key={idx} className="bg-gray-50 px-3 py-1 rounded-full">
                   <Text className="text-xs text-gray-700">
-                    Rank {prize.rankFrom}{prize.rankTo !== prize.rankFrom ? `-${prize.rankTo}` : ''}: {currency(prize.prizeAmount)}
+                    Rank {prize.rankFrom}
+                    {prize.rankTo !== prize.rankFrom
+                      ? `-${prize.rankTo}`
+                      : ""}: {currency(prize.prizeAmount)}
                   </Text>
                 </View>
               ))}
@@ -185,33 +236,31 @@ export default function ContestCard({
 
       {/* Bottom meta */}
       <View className="flex-row items-center px-4 py-3">
-        {data?.status === 'completed' && data?.isJoined ? (
+        {data?.status === "completed" && data?.isJoined ? (
           // Show rank and PnL for completed contests
           <>
             {data.rank !== undefined && (
               <View className="flex-row items-center mr-4">
                 <Ionicons name="trophy" size={16} color="#f59e0b" />
-                <Text className="font-bold ml-1">
-                  Rank #{data.rank}
-                </Text>
+                <Text className="font-bold ml-1">Rank #{data.rank}</Text>
               </View>
             )}
             {data.pnl !== undefined && (
               <View className="flex-row items-center mr-4">
-                <Ionicons 
-                  name={data.pnl >= 0 ? "trending-up" : "trending-down"} 
-                  size={16} 
-                  color={data.pnl >= 0 ? "#10b981" : "#ef4444"} 
+                <Ionicons
+                  name={data.pnl >= 0 ? "trending-up" : "trending-down"}
+                  size={16}
+                  color={data.pnl >= 0 ? "#10b981" : "#ef4444"}
                 />
-                <Text 
+                <Text
                   className={`font-semibold ml-1 ${
                     data.pnl >= 0 ? "text-green-600" : "text-red-600"
                   }`}
                 >
-                  {data.pnl >= 0 ? "+" : ""}{currency(data.pnl)}
-                  {data.pnlPercentage !== undefined && 
-                    ` (${data.pnlPercentage >= 0 ? "+" : ""}${data.pnlPercentage.toFixed(2)}%)`
-                  }
+                  {data.pnl >= 0 ? "+" : ""}
+                  {currency(data.pnl)}
+                  {data.pnlPercentage !== undefined &&
+                    ` (${data.pnlPercentage >= 0 ? "+" : ""}${data.pnlPercentage.toFixed(2)}%)`}
                 </Text>
               </View>
             )}
@@ -228,7 +277,11 @@ export default function ContestCard({
             <View className="flex-row items-center mr-4">
               <Ionicons name="medal" size={16} color="#f59e0b" />
               <Text className="font-bold ml-1">
-                {currency(data?.medalPrize ?? (data?.prizeDistribution?.[0]?.prizeAmount ?? Math.round(data?.prizePool / 2)))}
+                {currency(
+                  data?.medalPrize ??
+                    data?.prizeDistribution?.[0]?.prizeAmount ??
+                    Math.round(data?.prizePool / 2),
+                )}
               </Text>
             </View>
 
